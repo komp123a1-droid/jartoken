@@ -11,6 +11,8 @@ site/            landing sajt (kuhinja + tegla). Sam, bez backenda, radi kao dem
 test/            "launch control" — stranica za testiranje backenda pre launcha (srpski)
 backend/         Node 22: Helius webhook → lista grešnika (SQLite) → swear bot (Telegram/X) → ponoćna isplata → API
 server.js        servira site/ i test/ i prosleđuje /api /admin /webhook na backend (jedan origin, jedan tunel)
+run.js           pokreće i čuva backend + server.js (restart ako padnu, logovi u logs/)
+windows/         autostart sa Windowsom, isključivanje spavanja
 logo.svg
 ```
 
@@ -93,7 +95,7 @@ Test wallet je u `backend/keys/devnet/payout.json` (gitignored — pošalji ga d
 2. Launch na pump.fun iz jar walleta → CA → `MINT`.
 3. `npm run import-key` → privatni ključ iz Phantoma lokalno u `backend/keys/jar.json` → `PAYOUT_KEYPAIR=keys/jar.json`. **Ključ nikad u git, chat ili poruku.**
 4. `HELIUS_API_KEY` (helius.dev), `WEBHOOK_SECRET` (nasumičan string), `EXCLUDED_WALLETS` (bonding curve, pool, dev, burn).
-5. Server koji radi 24/7 (VPS ili stalni Cloudflare tunel) — quick tunel menja adresu.
+5. Hostovanje: tvoj PC + Cloudflare Tunnel (vidi "Hostovanje sa svog PC-ja"). Quick tunel (trycloudflare) menja adresu — ne koristiti za live.
 6. Helius webhook: enhanced, account = mint, URL `https://<host>/webhook/helius`, auth header = `WEBHOOK_SECRET`.
 7. `MODE=live`, **`DRY_RUN=true` prvi dan**, `/test/` → preflight mora da kaže SPREMNO, proveri probnu isplatu.
 8. `DRY_RUN=false`. Ručno: `npm run collect -- --send`.
@@ -101,6 +103,26 @@ Test wallet je u `backend/keys/devnet/payout.json` (gitignored — pošalji ga d
 Klejm creator fee-jeva (`CLAIM_FEES=true`, podrazumevano) ide automatski pre svake isplate, iz oba vaulta: bonding curve i PumpSwap posle graduacije. Testirano na **pravim pump.fun programima** kloniranim sa mainneta (`npm run pump-validator && npm run pump-test`).
 
 **Koliko tegla dobija** (pump fee config na mainnetu, 2026-10-01): **0.30%** svakog trejda na bonding curve-u; posle graduacije na PumpSwap **0.95%** pri ~420–1,470 SOL market capa, pa postepeno do 0.05% pri ~98,000 SOL. Primer: 1,000 SOL obima na curve-u = 3 SOL u tegli.
+
+## Hostovanje sa svog PC-ja (bez VPS-a)
+
+Sve radi sa jednog Windows računara: `run.js` drži backend (:8788) i sajt (:8787) upaljenim, a Cloudflare Tunnel vodi domen do računara (bez otvaranja portova, SSL rešava Cloudflare).
+
+1. **Domen u Cloudflare-u.** Kupi domen (npr. `theswearjar.fun`) i dodaj ga u Cloudflare (Add a domain); kod registrara stavi Cloudflare nameservere.
+2. **Tunel.** Cloudflare dashboard → Zero Trust → Networks → Tunnels → *Create a tunnel* → Cloudflared → ime `jar` → Windows → kopiraj komandu `cloudflared.exe service install <TOKEN>` i pokreni je u **Command Prompt kao administrator**. Tunel postaje Windows servis i pali se sam.
+3. **Public hostname** (u istom tunelu): `theswearjar.fun` → Service `HTTP` → `localhost:8787`. Isto za `www`.
+4. **Autostart:** desni klik na `windows/install-autostart.cmd` → *Run as administrator*. Backend i sajt se pale sa Windowsom (i pre logovanja); ako padnu, `run.js` ih podiže. Logovi: `logs/`.
+5. **Bez spavanja:** `windows/stay-awake.cmd` kao administrator. U Windows Update podesi *Active hours* tako da restart ne pada oko 00:00 UTC (02:00 leti / 01:00 zimi).
+6. Provera: `https://theswearjar.fun` (sajt) i `https://theswearjar.fun/test/` (admin token iz `backend/.admin-token`).
+
+**Ako je PC bio ugašen ili bez interneta** — backend to sam nadoknađuje:
+- pri paljenju i na svakih 10 min povuče propuštene trejdove iz Helius istorije (`BACKFILL_MIN`), pa nijedan prodavac ne promakne,
+- ako je ponoćna isplata propuštena, uradi jučerašnji dan čim se upali (samo jednom),
+- prekinuta isplata se nastavlja bez duplog plaćanja.
+
+Ograničenje: dok je PC ugašen, sajt ne radi, a isplata kasni do paljenja. Privatni ključ jar walleta stoji na tom PC-ju — drži na njemu samo dnevni iznos i ne koristi taj PC za sumnjive stvari.
+
+Isključi autostart: `windows/uninstall-autostart.cmd` (kao administrator).
 
 ## Bezbednost (ne menjati bez razloga)
 

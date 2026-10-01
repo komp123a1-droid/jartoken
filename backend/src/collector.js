@@ -24,7 +24,8 @@ function split({ jarSol, holders, sinners, excluded }) {
   return { distributable, clean, pay, feeSol, paidSol: paidLamports / LAMPORTS_PER_SOL, carrySol: distributable - feeSol - paidLamports / LAMPORTS_PER_SOL };
 }
 
-function makeCollector({ q, chain, bot }) {
+// beforeCollect: optional async hook run first (index.js uses it to backfill missed trades before splitting).
+function makeCollector({ q, chain, bot, beforeCollect }) {
   let running = false;
 
   // Payout row states: dry-run | pending (not signed yet) | sending (signed, outcome unknown) | sent | failed | unknown.
@@ -38,6 +39,7 @@ function makeCollector({ q, chain, bot }) {
       const prev = q.getCollection.get(day);
       if (prev && prev.status === "paid") return { day, skipped: "already paid", ...prev };
       if (prev && (prev.status === "partial" || prev.status === "sending")) return await resume(day, prev, send);
+      if (beforeCollect) { try { await beforeCollect(day); } catch (e) { console.error("[collect] beforeCollect failed:", e.message); } }
 
       if (send && cfg.claimFees) {
         try { console.log("[collect] claimed creator fees:", await chain.claim()); }
@@ -129,7 +131,17 @@ function makeCollector({ q, chain, bot }) {
     return new Date(next);
   }
 
-  return { collect, schedule, nextCollection: () => new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate() + 1)) };
+  // PC was off or asleep at midnight: on start-up, run yesterday's collection if it never finished.
+  async function catchUp() {
+    const day = yesterday();
+    const c = q.getCollection.get(day);
+    if (c && (c.status === "paid" || c.status === "empty")) return null;
+    if (c && c.status === "dry-run" && cfg.dryRun) return null; // already previewed, still in dry-run mode
+    console.log("[collect] catching up on " + day);
+    return collect({ day });
+  }
+
+  return { collect, schedule, catchUp, nextCollection: () => new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate() + 1)) };
 }
 
 module.exports = { makeCollector, split, yesterday };

@@ -25,6 +25,7 @@ function open(path) {
       day TEXT NOT NULL, wallet TEXT NOT NULL, tokens REAL, lamports INTEGER, sig TEXT, status TEXT, ts INTEGER,
       PRIMARY KEY (day, wallet)
     );
+    CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT);
     CREATE TABLE IF NOT EXISTS outbox (
       id INTEGER PRIMARY KEY AUTOINCREMENT, channel TEXT, text TEXT, status TEXT, ts INTEGER
     );
@@ -55,6 +56,8 @@ function open(path) {
     sinnersFull: db.prepare("SELECT wallet, swears, first_sig, ts FROM sinners WHERE day = ? ORDER BY ts DESC"),
     clearUnsentPayouts: db.prepare("DELETE FROM payouts WHERE day = ? AND status = 'dry-run'"),
     sentPayouts: db.prepare("SELECT wallet FROM payouts WHERE day = ? AND status = 'sent'"),
+    kvGet: db.prepare("SELECT v FROM kv WHERE k = ?"),
+    kvSet: db.prepare("INSERT INTO kv (k, v) VALUES (?, ?) ON CONFLICT (k) DO UPDATE SET v = excluded.v"),
     outbox: db.prepare("INSERT INTO outbox (channel, text, status, ts) VALUES (?, ?, ?, ?)"),
     outboxSince: db.prepare("SELECT COUNT(*) AS n FROM outbox WHERE channel = ? AND status = 'sent' AND ts > ?"),
   };

@@ -36,4 +36,5 @@ module.exports = {
   dbPath: env.DB_PATH || (env.MODE === "live" ? "./jar.db" : "./jar-mock.db"), // mock never touches the real ledger
   corsOrigin: env.CORS_ORIGIN || "*",
   mockTradeMs: num(env.MOCK_TRADE_MS, 7000),
+  backfillMin: num(env.BACKFILL_MIN, 10), // live: re-pull missed trades from Helius history every N minutes (0 = off)
 };

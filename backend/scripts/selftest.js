@@ -86,6 +86,39 @@ const { makeApi } = require("../src/api");
   assert.strictEqual((await call("GET", "/api/feed?limit=3")).body.length, 3);
   console.log("ok  api: state, wallet, bad address, webhook, feed");
 
+  // 5b. home-PC downtime: missed trades come back from Helius history, missed midnight is caught up
+  const { backfillFromCheckpoint, sinceFor } = require("../src/backfill");
+  cfg.heliusKey = "test"; // backfill only runs with a Helius key; fetch is faked below
+  const histNow = Math.floor(Date.now() / 1000);
+  const missed = Array.from({ length: 230 }, (_, i) => tx("hist" + i, i % 3 ? "SWAP" : "SWAP", i % 3 ? curve : holders[100 + i].owner, i % 3 ? holders[100 + i].owner : curve, 2e5));
+  missed.forEach((t, i) => (t.timestamp = histNow - i * 60)); // newest first, one per minute (~4h gap)
+  let calls = 0;
+  const fakeFetch = async (url) => {
+    calls++;
+    const before = new URL(url).searchParams.get("before");
+    const start = before ? missed.findIndex((t) => t.signature === before) + 1 : 0;
+    return { ok: true, json: async () => missed.slice(start, start + 100) };
+  };
+  const sellersMissed = new Set(missed.filter((t, i) => i % 3 === 0).map((t) => t.tokenTransfers[0].fromUserAccount));
+  const got = await backfillFromCheckpoint({ q, ledger, fetchImpl: fakeFetch });
+  assert.strictEqual(got, 230, "all missed trades recorded");
+  assert.strictEqual(calls, 4, "paged 100 + 100 + 30, then an empty page ends it");
+  const today2 = dayOf(Date.now());
+  const sinNow = new Set(q.sinnersOf.all(today2).map((r) => r.wallet));
+  assert.ok([...sellersMissed].filter((w) => dayOf(missed.find((t) => t.tokenTransfers[0].fromUserAccount === w).timestamp * 1000) === today2).every((w) => sinNow.has(w)), "missed sellers are sinners");
+  assert.ok(Number(q.kvGet.get("backfill_until").v) > 0, "checkpoint saved");
+  assert.strictEqual(await backfillFromCheckpoint({ q, ledger, fetchImpl: fakeFetch }), 0, "second pass records nothing new");
+  assert.ok(sinceFor(q) >= Date.now() - 10 * 60e3, "next scan starts at the checkpoint, not from scratch");
+  console.log("ok  backfill: 230 missed trades over a 4h gap recovered from history, sellers marked, no duplicates");
+
+  const yday = dayOf(Date.now() - 864e5);
+  const cu = await col.catchUp();
+  assert.ok(cu && cu.day === yday, "missed midnight is collected on start-up");
+  assert.strictEqual(await col.catchUp(), null, "already handled -> nothing");
+  console.log("ok  catch-up: PC off at midnight -> yesterday collected on start-up, only once");
+  cfg.heliusKey = "";
+
+
   console.log("\nall good.");
   process.exit(0);
 })().catch((e) => { console.error("FAIL", e); process.exit(1); });
