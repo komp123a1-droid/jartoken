@@ -45,7 +45,7 @@ const why = (e) => [(e.message || "").split("\n")[0], ...((e.logs || e.transacti
   const jar = Keypair.generate(), mint = Keypair.generate();
   await airdrop(jar.publicKey, 20);
   try {
-    const ix = await P.PUMP_SDK.createV2Instruction({ mint: mint.publicKey, name: "the swear jar", symbol: "JAR", uri: "https://swearjar.fun/meta.json",
+    const ix = await P.PUMP_SDK.createV2Instruction({ mint: mint.publicKey, name: "the swear jar", symbol: "JAR", uri: "https://jartoken.xyz/meta.json",
       creator: jar.publicKey, user: jar.publicKey, mayhemMode: false, creatorFeeBps: new BN(CREATOR_FEE_BPS) });
     await send([ix], [jar, mint]);
   } catch (e) { console.log("     " + why(e)); }
@@ -179,7 +179,7 @@ const why = (e) => [(e.message || "").split("\n")[0], ...((e.logs || e.transacti
   const { makeCollector } = require("../src/collector");
   const { q } = open(cfg.dbPath);
   const sinner = traders[0].publicKey.toBase58(); // sold on the curve
-  q.insertSinner.run("2099-03-01", sinner, "x", Date.now());
+  { const t = Date.parse("2099-03-01" + "T12:00:00Z"); q.insertEvent.run("x" + sinner, sinner, "sell", 1, t, "2099-03-01"); q.insertSinner.run("2099-03-01", sinner, "x", t); } // sold inside that day's window
   const chain = makeChain();
   const holders = await chain.holders();
   const jarPre = await bal(jar.publicKey);

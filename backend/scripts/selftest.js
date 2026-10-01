@@ -12,7 +12,7 @@ const { makeApi } = require("../src/api");
 
 (async () => {
   const chain = makeChain();
-  const { q } = open(cfg.dbPath);
+  const { db, q } = open(cfg.dbPath);
   const said = [];
   const bot = { swear: (e, o) => said.push([e.kind, o.firstToday]), collection: (s) => said.push(["collection", s.paidCount]) };
   const ledger = makeLedger({ q, excluded: new Set([...cfg.excluded, chain.jarWallet()]), onSwear: bot.swear });
@@ -27,6 +27,22 @@ const { makeApi } = require("../src/api");
   assert.deepStrictEqual(ledger.parse(tx("s3", "TRANSFER", A, B, 5e5)).map((e) => e.kind), ["transfer"]);
   assert.strictEqual(ledger.parse({ ...tx("s4", "SWAP", A, curve, 5e5), tokenTransfers: [{ fromUserAccount: A, toUserAccount: curve, mint: "OTHER", tokenAmount: 1 }] }).length, 0);
   console.log("ok  parser: buy / sell / transfer / other mint ignored");
+
+  // 1b. delegated sell (real mainnet case): tokenTransfers name the AUTHORITY, balance changes name the OWNER
+  const owner = holders[5].owner, delegate = holders[6].owner, tmpAcc = "TmpAcc1111111111111111111111111111111111111";
+  const bal = (user, amt) => ({ tokenBalanceChanges: [{ mint: cfg.mint, userAccount: user, tokenAccount: user + "ata", rawTokenAmount: { tokenAmount: String(Math.round(amt * 1e6)), decimals: 6 } }] });
+  const delegated = {
+    signature: "deleg1", timestamp: now, type: "SWAP",
+    tokenTransfers: [
+      { fromUserAccount: delegate, toUserAccount: delegate, fromTokenAccount: owner + "ata", toTokenAccount: tmpAcc, mint: cfg.mint, tokenAmount: 1939113 },
+      { fromUserAccount: delegate, toUserAccount: curve, fromTokenAccount: tmpAcc, toTokenAccount: curve + "ata", mint: cfg.mint, tokenAmount: 1939113 },
+    ],
+    accountData: [bal(owner, -1939113), bal(curve, 1939113)],
+  };
+  assert.deepStrictEqual(ledger.parse(delegated).map((e) => [e.wallet, e.kind]), [[owner, "sell"]], "the OWNER swore, not the delegate");
+  const roundTrip = { signature: "mev1", timestamp: now, type: "SWAP", accountData: [bal(delegate, 0), bal(curve, 0)] };
+  assert.strictEqual(ledger.parse(roundTrip).length, 0, "buy + sell in one tx with no net change is not a swear");
+  console.log("ok  parser: delegated sell is pinned on the owner (balance changes win over transfer authority)");
 
   // 2. record + dedupe + sinners
   ledger.ingest(tx("s1", "SWAP", curve, A, 5e5));
@@ -111,11 +127,11 @@ const { makeApi } = require("../src/api");
   assert.ok(sinceFor(q) >= Date.now() - 10 * 60e3, "next scan starts at the checkpoint, not from scratch");
   console.log("ok  backfill: 230 missed trades over a 4h gap recovered from history, sellers marked, no duplicates");
 
-  const yday = dayOf(Date.now() - 864e5);
+  db.prepare("UPDATE collections SET ts = ts - 2 * 3600000").run(); // the PC was off for 2 hours: no drop since
   const cu = await col.catchUp();
-  assert.ok(cu && cu.day === yday, "missed midnight is collected on start-up");
+  assert.ok(cu && cu.day === col.currentPeriod(), "a drop runs right away on start-up");
   assert.strictEqual(await col.catchUp(), null, "already handled -> nothing");
-  console.log("ok  catch-up: PC off at midnight -> yesterday collected on start-up, only once");
+  console.log("ok  catch-up: PC was off -> one drop on start-up, then back to the schedule");
   cfg.heliusKey = "";
 
 

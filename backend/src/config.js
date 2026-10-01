@@ -17,6 +17,8 @@ module.exports = {
   excluded: list(env.EXCLUDED_WALLETS),
 
   thresholdTokens: num(env.THRESHOLD_TOKENS, 100000),
+  payoutEveryMin: Math.max(1, num(env.PAYOUT_EVERY_MIN, 15)), // a drop every N minutes (1440 = once a day at 00:00 UTC)
+  sinWindowHours: num(env.SIN_WINDOW_HOURS, 24), // a sell/transfer-out blocks drops for this long
   // floor: a transfer to a brand-new account below rent-exemption (~0.00089 SOL) fails and sinks its whole tx
   minPayoutSol: Math.max(num(env.MIN_PAYOUT_SOL, 0.001), 0.00089088),
   reserveSol: num(env.RESERVE_SOL, 0.02),
@@ -30,6 +32,7 @@ module.exports = {
   x: {
     apiKey: env.X_API_KEY || "", apiSecret: env.X_API_SECRET || "", accessToken: env.X_ACCESS_TOKEN || "", accessSecret: env.X_ACCESS_SECRET || "",
     maxPerHour: num(env.X_MAX_PER_HOUR, 4), maxPerDay: num(env.X_MAX_PER_DAY, 15), minTokens: num(env.X_MIN_TOKENS, 1000000),
+    dropPostEveryH: num(env.X_DROP_POST_EVERY_H, 6),
   },
   botInMock: env.BOT_IN_MOCK === "true", // post mock (fake) swears to the real TG/X accounts: only for testing the bot
 

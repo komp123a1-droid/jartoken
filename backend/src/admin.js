@@ -33,7 +33,7 @@ function makeAdmin({ q, chain, ledger, collector }) {
     return {
       mode: chain.mode, dryRun: cfg.dryRun, claimFees: cfg.claimFees,
       mint: chain.mode === "mock" ? cfg.mint + " (mock)" : cfg.mint || null, decimals: cfg.decimals,
-      thresholdTokens: cfg.thresholdTokens, minPayoutSol: cfg.minPayoutSol, reserveSol: cfg.reserveSol, batchSize: cfg.batchSize,
+      thresholdTokens: cfg.thresholdTokens, payoutEveryMin: cfg.payoutEveryMin, sinWindowHours: cfg.sinWindowHours, minPayoutSol: cfg.minPayoutSol, reserveSol: cfg.reserveSol, batchSize: cfg.batchSize,
       excluded: cfg.excluded, jarWallet: safe(() => chain.jarWallet()),
       heliusSet: !!cfg.heliusKey, webhookSecretSet: !!cfg.webhookSecret, payoutKeypairSet: !!cfg.payoutKeypair,
       telegramSet: !!(cfg.telegram.token && cfg.telegram.chat), xSet: require("./x").configured(), botInMock: cfg.botInMock,
@@ -132,8 +132,8 @@ function makeAdmin({ q, chain, ledger, collector }) {
     }
     if (req.method === "POST" && url.pathname === "/admin/collect") {
       const b = parseJson(await readBody(req));
-      const day = b.day || dayOf(Date.now());
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return send(400, { error: "day: YYYY-MM-DD" });
+      const day = b.day || b.period || collector.currentPeriod();
+      if (!/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(day)) return send(400, { error: "day: YYYY-MM-DD ili period YYYY-MM-DDTHH:MM" });
       return send(200, await collector.collect({ day, send: false })); // never sends from the web
     }
     return send(404, { error: "not found" });

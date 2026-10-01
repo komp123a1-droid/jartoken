@@ -150,7 +150,7 @@ async function phaseCollect(day = "2099-01-01") {
   const sinners = [holders[7].owner, holders[8].owner, holders[9].owner];
   const excludedW = holders[10].owner;
   cfg.excluded.push(excludedW);
-  for (const w of sinners) q.insertSinner.run(day, w, "devnet-sig", Date.now());
+  for (const w of sinners) { const t = Date.parse(day + "T12:00:00Z"); q.insertEvent.run("devnet-sig" + w, w, "sell", 1, t, day); q.insertSinner.run(day, w, "devnet-sig", t); } // a sell inside that day's window
   holders.push({ owner: kp.publicKey.toBase58(), tokens: 5e7 }); // jar wallet itself holds tokens -> must be excluded
 
   const startBal = await conn.getBalance(kp.publicKey);
@@ -291,7 +291,7 @@ async function phaseOffline() {
 
   const run = async (label, holders, day, sinners = [], payWrap) => {
     const { q } = open(":memory:");
-    for (const w of sinners) q.insertSinner.run(day, w, "x", Date.now());
+    for (const w of sinners) { const t = Date.parse(day + "T12:00:00Z"); q.insertEvent.run("x" + w, w, "sell", 1, t, day); q.insertSinner.run(day, w, "x", t); } // a sell inside that day's window
     const chain = {
       mode: "live", jarWallet: () => kp.publicKey.toBase58(), jarSol: () => sol.balanceSol(kp.publicKey),
       holders: async () => holders.map((h) => ({ ...h })), pay: payWrap || ((p, h) => sol.sendPayouts(kp, p, h)), sigStatus: (s) => sol.sigStatus(s), claim: async () => "",

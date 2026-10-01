@@ -108,12 +108,12 @@ Klejm creator fee-jeva (`CLAIM_FEES=true`, podrazumevano) ide automatski pre sva
 
 Sve radi sa jednog Windows računara: `run.js` drži backend (:8788) i sajt (:8787) upaljenim, a Cloudflare Tunnel vodi domen do računara (bez otvaranja portova, SSL rešava Cloudflare).
 
-1. **Domen u Cloudflare-u.** Kupi domen (npr. `theswearjar.fun`) i dodaj ga u Cloudflare (Add a domain); kod registrara stavi Cloudflare nameservere.
+1. **Domen u Cloudflare-u.** Kupi domen (`jartoken.xyz`) i dodaj ga u Cloudflare (Add a domain); kod registrara stavi Cloudflare nameservere.
 2. **Tunel.** Cloudflare dashboard → Zero Trust → Networks → Tunnels → *Create a tunnel* → Cloudflared → ime `jar` → Windows → kopiraj komandu `cloudflared.exe service install <TOKEN>` i pokreni je u **Command Prompt kao administrator**. Tunel postaje Windows servis i pali se sam.
-3. **Public hostname** (u istom tunelu): `theswearjar.fun` → Service `HTTP` → `localhost:8787`. Isto za `www`.
+3. **Public hostname** (u istom tunelu): `jartoken.xyz` → Service `HTTP` → `localhost:8787`. Isto za `www`.
 4. **Autostart:** desni klik na `windows/install-autostart.cmd` → *Run as administrator*. Backend i sajt se pale sa Windowsom (i pre logovanja); ako padnu, `run.js` ih podiže. Logovi: `logs/`.
 5. **Bez spavanja:** `windows/stay-awake.cmd` kao administrator. U Windows Update podesi *Active hours* tako da restart ne pada oko 00:00 UTC (02:00 leti / 01:00 zimi).
-6. Provera: `https://theswearjar.fun` (sajt) i `https://theswearjar.fun/test/` (admin token iz `backend/.admin-token`).
+6. Provera: `https://jartoken.xyz` (sajt) i `https://jartoken.xyz/test/` (admin token iz `backend/.admin-token`).
 
 **Ako je PC bio ugašen ili bez interneta** — backend to sam nadoknađuje:
 - pri paljenju i na svakih 10 min povuče propuštene trejdove iz Helius istorije (`BACKFILL_MIN`), pa nijedan prodavac ne promakne,

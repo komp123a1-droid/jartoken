@@ -8,13 +8,43 @@ const short = (w) => w.slice(0, 4) + "…" + w.slice(-4);
 const fmt = (n) => (n >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, "") + "M" : Math.round(n / 1e3) + "K");
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
+const H = () => cfg.sinWindowHours;
 const SELL = [
-  (w, t) => `Language, ${w}.\n\nThat is a sell. ${t} $JAR. Into the jar.\n\nNo share for you tonight, dear. I am not angry. I am writing it down.\n\n— Sr. Agnes`,
-  (w, t) => `${w}. I heard that.\n\n${t} $JAR, sold. Into the jar.\n\nThe clean mouths thank you for your contribution.\n\n— Sr. Agnes`,
-  (w, t) => `${w}, at this hour?\n\nA sell of ${t} $JAR. You will not be collecting at midnight.\n\nThe ruler is right here.\n\n— Sr. Agnes`,
+  (w, t) => `Language, ${w}.
+
+That is a sell. ${t} $JAR. Into the jar.
+
+No drops for you for ${H()} hours, dear, and your unpaid balance goes back in the jar. I am not angry. I am writing it down.
+
+— Sr. Agnes`,
+  (w, t) => `${w}. I heard that.
+
+${t} $JAR, sold. Into the jar.
+
+The clean mouths thank you for your contribution. You may try again in ${H()} hours.
+
+— Sr. Agnes`,
+  (w, t) => `${w}, at this hour?
+
+A sell of ${t} $JAR. No drops for ${H()} hours.
+
+The ruler is right here.
+
+— Sr. Agnes`,
 ];
-const AGAIN = (w, n) => `Again, ${w}? That is ${n} today.\n\nI have run out of patience and I am running out of ink.\n\n— Sr. Agnes`;
-const TRANSFER = (w, t) => `${w} moved ${t} $JAR to another wallet.\n\nI know, dear. It counts. For now, a move is a sell.\n\nNo share tonight.\n\n— Sr. Agnes`;
+const AGAIN = (w, n) => `Again, ${w}? That is ${n} today.
+
+The clock starts over. ${H()} more hours without a drop. I am running out of ink.
+
+— Sr. Agnes`;
+const TRANSFER = (w, t) => `${w} moved ${t} $JAR to another wallet.
+
+I know, dear. It counts. For now, a move is a sell.
+
+No drops for ${H()} hours.
+
+— Sr. Agnes`;
+const hhmm = (id) => (id.length > 10 ? id.slice(11, 16) : "00:00");
 
 function makeBot({ q }) {
   async function send(channel, text, { preview = false } = {}) {
@@ -50,13 +80,27 @@ function makeBot({ q }) {
     if (e.tokens >= cfg.x.minTokens && firstToday) send("x", text);
   }
 
+  // Telegram: one short line per drop that actually paid someone (empty drops stay quiet).
+  // X: a summary at most every X_DROP_POST_EVERY_H hours, so frequent drops do not burn the post limit.
   function collection(s, { preview = false } = {}) {
-    const text = s.paidCount
-      ? `The jar was emptied at 00:00 UTC.\n\n${s.paidSol.toFixed(3)} SOL, shared among ${s.paidCount.toLocaleString("en-US")} clean mouths.\n\n${s.sinnerCount} wallets swore yesterday. They know who they are. So do I.\n\nBless you, clean mouths.\n\n— Sr. Agnes`
-      : `Midnight. The jar held ${s.jarSol.toFixed(3)} SOL, too little to share fairly.\n\nIt stays in the jar for tomorrow. Waste not.\n\n— Sr. Agnes`;
-    console.log("[agnes] collection:", text.split("\n")[2] || text.split("\n")[0]);
-    send("telegram", text, { preview });
-    send("x", text, { preview });
+    if (!s.paidCount) return;
+    const tg = `Drop at ${hhmm(s.day)} UTC: ${s.paidSol.toFixed(4)} SOL to ${s.paidCount.toLocaleString("en-US")} clean mouths.
+
+Bless you. Keep quiet.
+
+— Sr. Agnes`;
+    send("telegram", tg, { preview });
+    const lastX = Number(q.kvGet?.get("x_drop_post")?.v || 0);
+    if (preview || Date.now() - lastX < cfg.x.dropPostEveryH * 3600e3) return;
+    const text = `The jar dropped again at ${hhmm(s.day)} UTC.
+
+${s.paidSol.toFixed(3)} SOL, shared among ${s.paidCount.toLocaleString("en-US")} clean mouths.
+
+${s.sinnerCount} wallets swore in the last ${H()} hours. They know who they are. So do I.
+
+— Sr. Agnes`;
+    q.kvSet?.run("x_drop_post", String(Date.now()));
+    send("x", text);
   }
 
   return { swear, collection };

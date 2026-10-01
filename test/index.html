@@ -143,8 +143,8 @@ ol.launch{margin:0;padding-left:22px} ol.launch li{margin:5px 0}
   <div class="cards">
     <div class="card"><div class="k">u tegli (jarSol)</div><div class="v" id="c-jar">–</div><div class="s" id="c-jar-s"></div></div>
     <div class="card"><div class="k">čisti holderi</div><div class="v" id="c-clean">–</div><div class="s" id="c-clean-s"></div></div>
-    <div class="card"><div class="k">grešnici danas</div><div class="v" id="c-sin">–</div><div class="s" id="c-sin-s"></div></div>
-    <div class="card"><div class="k">do sledeće isplate</div><div class="v mono" id="c-next" style="font-size:20px">–</div><div class="s" id="c-next-s"></div></div>
+    <div class="card"><div class="k">grešnici (bez dropova)</div><div class="v" id="c-sin">–</div><div class="s" id="c-sin-s"></div></div>
+    <div class="card"><div class="k">do sledećeg dropa</div><div class="v mono" id="c-next" style="font-size:20px">–</div><div class="s" id="c-next-s"></div></div>
   </div>
   <div class="tw"><table>
     <thead><tr><th>vreme</th><th>vrsta</th><th>wallet</th><th class="num">tokeni</th><th>sig</th></tr></thead>
@@ -172,7 +172,7 @@ ol.launch{margin:0;padding-left:22px} ol.launch li{margin:5px 0}
 <!-- 5. WALLET -->
 <section id="wallet">
   <h2>Provera walleta</h2>
-  <p class="sub">Isto što vidi posetilac sajta: da li je opsovao danas, koliko drži, procena deljenja, istorija isplata.</p>
+  <p class="sub">Isto što vidi posetilac sajta: da li je opsovao (pa nema dropova 24h), koliko drži, procena sledećeg dropa, neisplaćeni saldo, istorija isplata.</p>
   <div class="row">
     <input id="w-addr" type="text" class="grow mono" placeholder="Solana adresa">
     <button id="w-go" class="primary">proveri</button>
@@ -192,24 +192,25 @@ ol.launch{margin:0;padding-left:22px} ol.launch li{margin:5px 0}
 <!-- 7. ISPLATE -->
 <section id="isplate">
   <h2>Isplate</h2>
-  <p class="sub">Probna isplata sa sajta je <b>uvek dry run</b> — ništa se ne šalje. Prave isplate idu samo preko CLI-ja (<code>npm run collect -- --send</code>) ili automatski u ponoć ako je DRY_RUN=false.</p>
+  <p class="sub">Drop ide automatski <b>na svakih 15 min</b> (<code>PAYOUT_EVERY_MIN</code>) svim čistim holderima (≥ 100.000 $JAR, bez prodaje u poslednjih 24h — <code>SIN_WINDOW_HOURS</code>). Prodaja = bez dropova 24h i gubi neisplaćeni saldo (vraća se u teglu). Lični saldo se šalje kad dostigne 0,001 SOL. Probni drop sa ove strane je <b>uvek dry run</b> — ništa se ne šalje. Prave isplate idu samo preko CLI-ja (<code>npm run collect -- --send</code>) ili automatski ako je DRY_RUN=false.</p>
   <div class="row">
-    <label for="p-day">dan (UTC)</label>
-    <input id="p-day" type="date">
-    <button id="p-today">danas</button>
+    <label for="p-day">period (UTC)</label>
+    <input id="p-day" type="text" class="mono" style="width:170px" placeholder="YYYY-MM-DDTHH:MM" title="YYYY-MM-DDTHH:MM = jedan 15-min period · YYYY-MM-DD = 24h prozor tog UTC dana" spellcheck="false" autocomplete="off">
+    <button id="p-now">sada</button>
+    <button id="p-today">danas (ceo dan)</button>
     <button id="p-yest">juče</button>
-    <button id="p-load">prikaži dan</button>
-    <span id="p-confirm-wrap"><button id="p-run" class="primary">probna isplata (dry run)</button></span>
+    <button id="p-load">prikaži</button>
+    <span id="p-confirm-wrap"><button id="p-run" class="primary">probni drop (dry run)</button></span>
   </div>
   <div id="p-sum" class="out"></div>
-  <h3 style="font-size:14px;margin:14px 0 6px">Isplate za dan <span id="p-dayl" class="mono"></span> <span class="small mutedc">(top 50)</span></h3>
+  <h3 style="font-size:14px;margin:14px 0 6px">Isplate za <span id="p-dayl" class="mono"></span> <span class="small mutedc">(top 50)</span></h3>
   <div class="tw"><table>
     <thead><tr><th>#</th><th>wallet</th><th class="num">tokeni</th><th class="num">SOL</th><th>status</th><th>sig</th></tr></thead>
     <tbody id="p-rows"><tr><td colspan="6" class="mutedc">—</td></tr></tbody>
   </table></div>
   <h3 style="font-size:14px;margin:16px 0 6px">Istorija</h3>
   <div class="tw"><table>
-    <thead><tr><th>dan</th><th>status</th><th class="num">tegla</th><th class="num">za podelu</th><th class="num">čisti</th><th class="num">grešnici</th><th class="num">isplaćeno</th><th class="num">SOL</th><th class="num">ostaje</th></tr></thead>
+    <thead><tr><th>dan / period</th><th>status</th><th class="num">tegla</th><th class="num">za podelu</th><th class="num">čisti</th><th class="num">grešnici</th><th class="num">isplaćeno</th><th class="num">SOL</th><th class="num">ostaje</th></tr></thead>
     <tbody id="p-hist"><tr><td colspan="9" class="mutedc">—</td></tr></tbody>
   </table></div>
 </section>
@@ -225,14 +226,14 @@ ol.launch{margin:0;padding-left:22px} ol.launch li{margin:5px 0}
 
   <h3 style="font-size:14px;margin:18px 0 6px">Launch ček-lista</h3>
   <ol class="launch">
-    <li>Napravi <b>jar wallet</b> (hot wallet, drži samo dnevni iznos — nikad ceo trezor).</li>
+    <li>Napravi <b>jar wallet</b> (hot wallet, drži samo mali iznos za dropove — nikad ceo trezor).</li>
     <li>Launch na <b>pump.fun</b> sa jar walletom kao <b>creator</b> (creator fee ide u teglu).</li>
     <li>U <code>.env</code> upiši: <code>MINT</code>, <code>PAYOUT_KEYPAIR</code>, <code>EXCLUDED_WALLETS</code> (bonding curve, pool, dev, burn), <code>HELIUS_API_KEY</code>, <code>WEBHOOK_SECRET</code>, <code>TG_BOT_TOKEN</code> / <code>TG_CHAT_ID</code> (proveri: <code>npm run tg</code>), <code>X_API_KEY</code> / <code>X_API_SECRET</code> / <code>X_ACCESS_TOKEN</code> / <code>X_ACCESS_SECRET</code> (proveri: <code>npm run x</code>).</li>
     <li><b>Helius webhook</b>: tip <i>enhanced</i>, account = mint, URL <code>https://&lt;tunel&gt;/webhook/helius</code>, auth header = <code>WEBHOOK_SECRET</code>.</li>
     <li><code>MODE=live</code>, <code>DRY_RUN=true</code> prvi dan.</li>
     <li>Proveri <b>probnu isplatu</b> ovde (sekcija Isplate): grešnici nisu na listi, iznosi imaju smisla.</li>
     <li><code>DRY_RUN=false</code>.</li>
-    <li><code>npm run collect -- --send</code> ili sačekaj ponoć (00:00 UTC).</li>
+    <li><code>npm run collect -- --send</code> ili sačekaj sledeći drop (na svakih 15 min, <code>PAYOUT_EVERY_MIN</code>). Prodaja = bez dropova 24h (<code>SIN_WINDOW_HOURS</code>) i gubi neisplaćeni saldo.</li>
   </ol>
   <div class="note"><b>Klejm fee-jeva:</b> automatski pre svake isplate (<code>CLAIM_FEES=true</code>), iz oba vaulta (bonding curve + PumpSwap). Testirano na pravim pump.fun programima kloniranim sa mainneta: <code>npm run pump-validator &amp;&amp; npm run pump-test</code>.</div>
 </section>
@@ -256,6 +257,11 @@ const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&":
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const todayUTC = () => new Date().toISOString().slice(0, 10);
 const yesterdayUTC = () => new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+let everyMin = 15, sinHours = 24; // iz /api/state (payoutEveryMin, sinWindowHours) kad backend vrati
+// trenutni drop period: "YYYY-MM-DDTHH:MM" (UTC, zaokruženo naniže na everyMin)
+const periodUTC = () => { const step = Math.max(1, everyMin) * 6e4; return new Date(Math.floor(Date.now() / step) * step).toISOString().slice(0, 16); };
+const PERIOD_RE = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/;
+const utc16 = (v) => { const d = new Date(v); return isNaN(d) ? String(v) : d.toISOString().replace("T", " ").slice(0, 16); };
 const fmtSol = (n) => (n == null || isNaN(n) ? "–" : Number(n).toFixed(4));
 const lam2sol = (l) => (l == null ? null : Number(l) / 1e9);
 function fmtTok(n) {
@@ -388,14 +394,16 @@ async function loadState() {
   if (!r.ok) { $("state-meta").textContent = r.error || ""; return r; }
   const s = r.data;
   if (s.mode) mode = s.mode;
+  if (Number(s.payoutEveryMin) > 0) everyMin = Number(s.payoutEveryMin);
+  if (Number(s.sinWindowHours) > 0) sinHours = Number(s.sinWindowHours);
   $("c-jar").textContent = fmtSol(s.jarSol) + " SOL";
-  $("c-jar-s").textContent = s.jarWallet ? short(s.jarWallet) : (s.demo ? "demo tegla" : "");
+  $("c-jar-s").textContent = (s.jarWallet ? short(s.jarWallet) : (s.demo ? "demo tegla" : "")) + (s.owedTotalSol != null ? " · neisplaćeni saldo: " + fmtSol(s.owedTotalSol) + " SOL" : "");
   $("c-clean").textContent = (s.cleanCount ?? 0).toLocaleString("sr-Latn");
   $("c-clean-s").textContent = fmtTok(s.cleanTokens) + " tokena · prag " + fmtTok(s.thresholdTokens);
-  $("c-sin").textContent = (s.sinnersToday ?? 0).toLocaleString("sr-Latn");
-  $("c-sin-s").textContent = "dan " + s.day + " (UTC)";
+  $("c-sin").textContent = (s.blockedNow ?? s.sinnersToday ?? 0).toLocaleString("sr-Latn");
+  $("c-sin-s").textContent = "prodali u poslednjih " + sinHours + "h · dan " + s.day + " (UTC)";
   nextAt = s.nextCollection ? new Date(s.nextCollection).getTime() : null;
-  $("c-next-s").textContent = s.nextCollection ? new Date(s.nextCollection).toISOString().replace("T", " ").slice(0, 16) + " UTC · min " + s.minPayoutSol + " SOL" : "";
+  $("c-next-s").textContent = s.nextCollection ? new Date(s.nextCollection).toISOString().replace("T", " ").slice(0, 16) + " UTC · na svakih " + everyMin + " min" + (s.minPayoutSol != null ? " · slanje od " + s.minPayoutSol + " SOL" : "") : "";
   $("state-meta").textContent = "CA: " + (s.ca || "–");
   tick();
   return r;
@@ -404,7 +412,7 @@ function tick() {
   if (!nextAt) return;
   let d = Math.max(0, Math.floor((nextAt - Date.now()) / 1000));
   const h = Math.floor(d / 3600), m = Math.floor((d % 3600) / 60), s = d % 60;
-  $("c-next").textContent = [h, m, s].map((x) => String(x).padStart(2, "0")).join(":");
+  $("c-next").textContent = (h > 0 ? [h, m, s] : [m, s]).map((x) => String(x).padStart(2, "0")).join(":");
 }
 setInterval(tick, 1000);
 async function loadFeed() {
@@ -448,17 +456,19 @@ async function checkWallet(addr) {
   out.innerHTML = `
     <div style="margin-bottom:8px">${addrEl(w.wallet, true)}</div>
     <div class="row">
-      ${w.swore ? chip("OPSOVAO danas · " + w.swearsToday + "×", "bad") : chip("čista usta danas", "ok")}
-      ${w.eligible ? chip("ima pravo na deo", "ok") : chip("nema pravo na deo", "warn")}
+      ${w.swore ? chip("OPSOVAO · " + w.swearsToday + "× · bez dropova " + sinHours + "h", "bad") : chip("čista usta", "ok")}
+      ${w.eligible ? chip("dobija sledeći drop", "ok") : chip("ne dobija drop", "warn")}
     </div>
     <table class="kv"><tbody>
       <tr><td>dan</td><td>${esc(w.day)}</td></tr>
       <tr><td>tokens</td><td>${fmtTok(w.tokens)} <span class="mutedc small">(${esc(w.tokens)})</span></td></tr>
       <tr><td>swearsToday</td><td>${esc(w.swearsToday)}</td></tr>
       <tr><td>firstSwearSig</td><td class="mono small">${esc(w.firstSwearSig || "—")}</td></tr>
-      <tr><td>estShareSol</td><td>${fmtSol(w.estShareSol)} SOL ${w.estimate ? '<span class="mutedc small">(procena, snimak holdera keširan do 5 min)</span>' : ""}</td></tr>
+      <tr><td>blockedUntil</td><td>${w.blockedUntil ? esc(utc16(w.blockedUntil)) + ' UTC <span class="mutedc small">(tada se dropovi nastavljaju)</span>' : '<span class="mutedc">—</span>'}</td></tr>
+      <tr><td>estShareSol</td><td>${fmtSol(w.estShareSol)} SOL <span class="mutedc small">(sledeći drop${w.estimate ? ", procena, snimak holdera keširan do 5 min" : ""})</span></td></tr>
+      <tr><td>owedSol</td><td>${w.owedSol != null ? fmtSol(w.owedSol) + ' SOL <span class="mutedc small">(neisplaćeni saldo, šalje se od 0,001 SOL)</span>' : '<span class="mutedc">—</span>'}</td></tr>
     </tbody></table>
-    <div style="margin-top:8px" class="small mutedc">danas po vrsti</div>
+    <div style="margin-top:8px" class="small mutedc">po vrsti (today)</div>
     <table><tbody>${kinds}</tbody></table>
     <div style="margin-top:8px" class="small mutedc">isplate (${(w.payouts || []).length})</div>
     ${pays ? `<div class="tw"><table><thead><tr><th>dan</th><th class="num">SOL</th><th>status</th><th>sig</th></tr></thead><tbody>${pays}</tbody></table></div>` : '<div class="mutedc small">nema isplata</div>'}`;
@@ -479,12 +489,22 @@ async function loadOutbox() {
 $("ob-refresh").onclick = loadOutbox;
 
 // ---------- 7. isplate ----------
-$("p-day").value = todayUTC();
+$("p-day").value = periodUTC();
+$("p-now").onclick = () => { $("p-day").value = periodUTC(); loadDay(); };
 $("p-today").onclick = () => { $("p-day").value = todayUTC(); loadDay(); };
+$("p-day").addEventListener("keydown", (e) => { if (e.key === "Enter") loadDay(); });
+// "YYYY-MM-DD" = 24h prozor tog UTC dana · "YYYY-MM-DDTHH:MM" = jedan drop period; prazno/neispravno → trenutni period
+function pickedPeriod() {
+  const v = $("p-day").value.trim();
+  if (PERIOD_RE.test(v)) return v;
+  const p = periodUTC();
+  $("p-day").value = p;
+  return p;
+}
 $("p-yest").onclick = () => { $("p-day").value = yesterdayUTC(); loadDay(); };
 $("p-load").onclick = () => loadDay();
 function summaryHtml(s) {
-  if (s.skipped) return `<div style="color:var(--warn)">Preskočeno: <b>${esc(s.skipped)}</b> — taj dan je već isplaćen, ništa nije ponovo računato.</div>`;
+  if (s.skipped) return `<div style="color:var(--warn)">Preskočeno: <b>${esc(s.skipped)}</b> — taj period je već isplaćen, ništa nije ponovo računato.</div>`;
   return `<div class="row">${statusChip(s.status)}<span class="mono">${esc(s.day)}</span><span class="small mutedc">ništa nije poslato</span></div>
   <table class="kv"><tbody>
     <tr><td>jarSol</td><td>${fmtSol(s.jarSol)} SOL</td></tr>
@@ -493,7 +513,8 @@ function summaryHtml(s) {
     <tr><td>sinnerCount</td><td>${esc(s.sinnerCount)}</td></tr>
     <tr><td>paidCount</td><td>${esc(s.paidCount)}</td></tr>
     <tr><td>paidSol</td><td>${fmtSol(s.paidSol)} SOL</td></tr>
-    <tr><td>carrySol</td><td>${fmtSol(s.carrySol)} SOL <span class="mutedc small">(ostaje u tegli — delovi ispod minimuma)</span></td></tr>
+    <tr><td>carrySol</td><td>${fmtSol(s.carrySol)} SOL <span class="mutedc small">(ostaje u tegli)</span></td></tr>${s.owedTotalSol != null ? `
+    <tr><td>owedTotalSol</td><td>${fmtSol(s.owedTotalSol)} SOL <span class="mutedc small">(neisplaćeni salda ispod 0,001 SOL — čekaju, ne gube se)</span></td></tr>` : ""}
   </tbody></table>`;
 }
 async function runCollect(day) {
@@ -502,9 +523,9 @@ async function runCollect(day) {
 }
 // inline confirmation (no confirm())
 function askRun() {
-  const day = $("p-day").value || todayUTC();
+  const day = pickedPeriod();
   const wrap = $("p-confirm-wrap");
-  wrap.innerHTML = `<span class="confirm">Probna isplata za <b class="mono">${esc(day)}</b>? Ništa se ne šalje, ali upisuje se u istoriju. <button id="p-yes" class="primary">da, pokreni</button><button id="p-no">otkaži</button></span>`;
+  wrap.innerHTML = `<span class="confirm">Probni drop za <b class="mono">${esc(day)}</b>? Ništa se ne šalje, ali upisuje se u istoriju. <button id="p-yes" class="primary">da, pokreni</button><button id="p-no">otkaži</button></span>`;
   $("p-no").onclick = resetRun;
   $("p-yes").onclick = async () => {
     wrap.innerHTML = '<span class="mutedc">računam…</span>';
@@ -515,17 +536,17 @@ function askRun() {
     loadDay(true); loadHistory(); setTimeout(loadOutbox, 400);
   };
 }
-function resetRun() { $("p-confirm-wrap").innerHTML = '<button id="p-run" class="primary">probna isplata (dry run)</button>'; $("p-run").onclick = askRun; }
+function resetRun() { $("p-confirm-wrap").innerHTML = '<button id="p-run" class="primary">probni drop (dry run)</button>'; $("p-run").onclick = askRun; }
 $("p-run").onclick = askRun;
 async function loadDay(keepSummary) {
-  const day = $("p-day").value || todayUTC();
+  const day = pickedPeriod();
   $("p-dayl").textContent = day;
   const r = await api("/api/collections/" + encodeURIComponent(day));
   const tb = $("p-rows");
   if (!r.ok) { tb.innerHTML = `<tr><td colspan="6" class="err">${esc(r.error)}</td></tr>`; return r; }
   const c = r.data.collection, p = r.data.payouts || [];
-  if (!keepSummary) $("p-sum").innerHTML = c ? summaryHtml({ day: c.day, status: c.status, jarSol: c.jar_sol, distributableSol: c.distributable_sol, cleanCount: c.clean_count, sinnerCount: c.sinner_count, paidCount: c.paid_count, paidSol: c.paid_sol, carrySol: c.carry_sol }).replace("ništa nije poslato", "zapisano " + fmtDT(c.ts)) : '<span class="mutedc">Za ovaj dan još nema obračuna.</span>';
-  tb.innerHTML = p.length ? p.slice(0, 50).map((x, i) => `<tr><td class="mutedc">${i + 1}</td><td>${addrEl(x.wallet)}</td><td class="num">${fmtTok(x.tokens)}</td><td class="num">${fmtSol(lam2sol(x.lamports))}</td><td>${statusChip(x.status)}</td><td class="mono small">${esc(x.sig ? String(x.sig).slice(0, 14) + "…" : "—")}</td></tr>`).join("") + (p.length > 50 ? `<tr><td colspan="6" class="mutedc">… još ${p.length - 50}</td></tr>` : "") : '<tr><td colspan="6" class="mutedc">nema isplata za ovaj dan</td></tr>';
+  if (!keepSummary) $("p-sum").innerHTML = c ? summaryHtml({ day: c.day, status: c.status, jarSol: c.jar_sol, distributableSol: c.distributable_sol, cleanCount: c.clean_count, sinnerCount: c.sinner_count, paidCount: c.paid_count, paidSol: c.paid_sol, carrySol: c.carry_sol }).replace("ništa nije poslato", "zapisano " + fmtDT(c.ts)) : '<span class="mutedc">Za ovaj period još nema obračuna.</span>';
+  tb.innerHTML = p.length ? p.slice(0, 50).map((x, i) => `<tr><td class="mutedc">${i + 1}</td><td>${addrEl(x.wallet)}</td><td class="num">${fmtTok(x.tokens)}</td><td class="num">${fmtSol(lam2sol(x.lamports))}</td><td>${statusChip(x.status)}</td><td class="mono small">${esc(x.sig ? String(x.sig).slice(0, 14) + "…" : "—")}</td></tr>`).join("") + (p.length > 50 ? `<tr><td colspan="6" class="mutedc">… još ${p.length - 50}</td></tr>` : "") : '<tr><td colspan="6" class="mutedc">nema isplata za ovaj period</td></tr>';
   return r;
 }
 async function loadHistory() {
@@ -558,8 +579,14 @@ async function loadConfig() {
   config = r.data;
   if (config.mode) mode = config.mode;
   renderMode();
-  tb.innerHTML = Object.entries(config).map(([k, v]) => {
+  if (Number(config.payoutEveryMin) > 0) everyMin = Number(config.payoutEveryMin);
+  if (Number(config.sinWindowHours) > 0) sinHours = Number(config.sinWindowHours);
+  const TOP = ["payoutEveryMin", "sinWindowHours"];
+  const entries = Object.entries(config).sort((a, b) => (TOP.includes(b[0]) ? 1 : 0) - (TOP.includes(a[0]) ? 1 : 0));
+  tb.innerHTML = entries.map(([k, v]) => {
     let val;
+    if (k === "payoutEveryMin") return `<tr><td>${esc(k)}</td><td><span class="mono">${esc(v)}</span> <span class="small mutedc">min · drop na svakih ${esc(v)} min (PAYOUT_EVERY_MIN)</span></td></tr>`;
+    if (k === "sinWindowHours") return `<tr><td>${esc(k)}</td><td><span class="mono">${esc(v)}</span> <span class="small mutedc">h · posle prodaje nema dropova toliko sati, neisplaćeni saldo se gubi (SIN_WINDOW_HOURS)</span></td></tr>`;
     if (typeof v === "boolean") val = yn(v) + (k === "dryRun" ? (v ? ' <span class="small okc">isplate se ne šalju</span>' : ' <span class="small err">isplate se šalju!</span>') : "");
     else if (Array.isArray(v)) val = v.length ? v.map((x) => addrEl(String(x), true)).join("<br>") : '<span class="mutedc">(prazno)</span>';
     else if (v === null || v === "") val = '<span class="mutedc">—</span>';
@@ -599,12 +626,14 @@ const STEPS = [
       if (!r.ok) return { ok: false, msg: r.error + " — pokreni: cd D:\\desktop\\jar-coin\\backend && npm start" };
       return { ok: !!r.data.ok, msg: "mode: " + r.data.mode + (r.data.mode === "mock" ? " (test podaci — slobodno se igraj)" : " (pravi lanac — koraci 3–6 isključeni)") };
     } },
-  { t: "Stanje tegle", d: "GET /api/state — tegla, čisti holderi, grešnici, sledeća isplata.", run: async () => {
+  { t: "Stanje tegle", d: "GET /api/state — tegla, čisti holderi, grešnici, sledeći drop (nextCollection), payoutEveryMin, sinWindowHours.", run: async () => {
       const r = await loadState();
       if (!r.ok) return { ok: false, msg: r.error };
       const s = r.data, miss = ["jarSol", "cleanCount", "sinnersToday", "nextCollection", "day"].filter((k) => s[k] === undefined);
       if (miss.length) return { ok: false, msg: "fale polja: " + miss.join(", ") };
-      return { ok: true, msg: `tegla ${fmtSol(s.jarSol)} SOL · čistih ${s.cleanCount} · grešnika danas ${s.sinnersToday} · dan ${s.day}` };
+      const next = new Date(s.nextCollection).getTime(), inMin = (next - Date.now()) / 6e4;
+      const nextOk = isFinite(next) && inMin > -1 && inMin <= everyMin + 1;
+      return { ok: nextOk, msg: `tegla ${fmtSol(s.jarSol)} SOL · čistih ${s.cleanCount} · grešnika ${s.sinnersToday} · dan ${s.day} · sledeći drop za ${isFinite(inMin) ? inMin.toFixed(1) : "?"} min` + (s.payoutEveryMin != null ? ` (na svakih ${s.payoutEveryMin} min, prozor ${s.sinWindowHours}h)` : " (backend ne vraća payoutEveryMin — stariji backend?)") + (nextOk ? "" : ` — nextCollection nije u sledećih ${everyMin} min`) };
     } },
   { t: "Simuliraj kupovinu", mock: true, d: "Kupovina nije psovka: test wallet posle kupovine NIJE grešnik.", run: async () => {
       needMock(); needToken();
@@ -619,7 +648,7 @@ const STEPS = [
       }
       return { ok: false, msg: "nije nađen čist wallet" };
     } },
-  { t: "Prodaja istog walleta", mock: true, d: "Posle prodaje wallet JESTE grešnik, swearsToday = 1, Agnes je napisala novu poruku.", run: async () => {
+  { t: "Prodaja istog walleta", mock: true, d: "Posle prodaje wallet JESTE grešnik (bez dropova 24h, gubi neisplaćeni saldo), swearsToday = 1, Agnes je napisala novu poruku.", run: async () => {
       needMock(); needToken(); needWallet();
       const before = await outboxMaxId();
       const d = await simulate({ kind: "sell", wallet: scen.wallet });
@@ -627,7 +656,7 @@ const STEPS = [
       const w = await getWallet(scen.wallet);
       const m = await waitOutbox(before, (x) => x.text && x.text.includes(short(scen.wallet)));
       const ok = w.swore === true && w.swearsToday === 1 && !!m;
-      const parts = [`swore: <b>${w.swore}</b>`, `swearsToday: <b>${w.swearsToday}</b>`, m ? '<span class="okc">nova Agnes poruka ✓</span>' : '<span class="err">nema nove poruke u outboxu</span>'];
+      const parts = [`swore: <b>${w.swore}</b>`, `swearsToday: <b>${w.swearsToday}</b>`, `blockedUntil: <b>${w.blockedUntil ? esc(utc16(w.blockedUntil)) + " UTC" : "—"}</b>`, `owedSol: <b>${w.owedSol != null ? fmtSol(w.owedSol) : "—"}</b>`, m ? '<span class="okc">nova Agnes poruka ✓</span>' : '<span class="err">nema nove poruke u outboxu</span>'];
       if (w.swearsToday > 1) parts.push('<span class="err">swearsToday > 1 — wallet je već psovao danas; pokreni ponovo od koraka 3</span>');
       return { ok, html: parts.join(" · ") + (m ? pre(m) : "") };
     } },
@@ -654,7 +683,7 @@ const STEPS = [
       const tcount = (w.today && w.today.transfer && w.today.transfer.count) || 0;
       return { ok: w.swore === true && tcount >= 1, html: `${addrEl(ev.wallet)} transfer ${fmtTok(ev.tokens)} · kind: ${kindEl(ev.kind)} · swore: <b>${w.swore}</b> · transfera danas: ${tcount}` + (m ? pre(m) : ' · <span class="mutedc">(poruka nije nađena)</span>') };
     } },
-  { t: "Probna isplata za danas", d: "POST /admin/collect za današnji UTC dan (dry run). Grešnici nisu na listi, isplaćeno ≤ za podelu, status dry-run.", run: async () => {
+  { t: "Probni drop za danas (ceo dan)", d: "POST /admin/collect sa {day: današnji UTC datum} = 24h prozor (dry run). Grešnici nisu na listi, isplaćeno ≤ za podelu, status dry-run.", run: async () => {
       needToken();
       const day = todayUTC();
       const r = await runCollect(day);
@@ -680,7 +709,7 @@ const STEPS = [
       if (st === "empty") parts.push('<span class="mutedc">(empty = premalo u tegli za podelu)</span>');
       return { ok: !leaked.length && paidOk && (st === "dry-run" || st === "empty") && sr.ok, html: parts.join("<br>") };
     } },
-  { t: "Provera walleta", d: "GET /api/wallet za test wallet: opsovao, nema pravo na deo, procena 0. Neispravna adresa vraća 400.", run: async () => {
+  { t: "Provera walleta", d: "GET /api/wallet za test wallet: opsovao, ne dobija drop (blockedUntil postavljen), procena sledećeg dropa 0. Neispravna adresa vraća 400.", run: async () => {
       let w = scen.wallet;
       if (!w) { const f = await api("/api/feed?limit=1"); w = f.ok && f.data[0] ? f.data[0].wallet : null; }
       if (!w) return { ok: false, msg: "nema walleta za proveru (feed je prazan)" };

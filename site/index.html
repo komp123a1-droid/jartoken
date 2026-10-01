@@ -345,7 +345,7 @@
   <nav class="cabinets" aria-label="Kitchen cabinets">
     <div class="cab" data-panel="rules"><div class="shelf">tea · sugar · rules</div><button class="door" aria-label="House rules: how it works"><span class="tape hand">house rules</span><span class="sub">how it works</span></button></div>
     <div class="cab" data-panel="confess"><div class="shelf">a small stool</div><button class="door" aria-label="Confession: check your wallet"><span class="tape hand">confession</span><span class="sub">check your wallet</span></button></div>
-    <div class="cab" data-panel="bless"><div class="shelf">three small jars</div><button class="door" aria-label="Collection: payouts"><span class="tape hand">collection</span><span class="sub">payouts</span></button></div>
+    <div class="cab" data-panel="bless"><div class="shelf">three small jars</div><button class="door" aria-label="The drop: payouts every 15 minutes"><span class="tape hand">the drop</span><span class="sub">every 15 min</span></button></div>
     <div class="cab" data-panel="recipe"><div class="shelf">flour · recipe tin</div><button class="door" aria-label="Recipe tin: tokenomics and CA"><span class="tape hand">recipe tin</span><span class="sub">tokenomics · CA</span></button></div>
     <div class="cabar" id="cabar">
       <span class="cab-hint hand" id="cabHint">↑ open the cupboards, dear ↑</span>
@@ -355,7 +355,7 @@
       <span class="ca-links">
         <a href="https://x.com/theswearjarsol" target="_blank" rel="noopener">X</a>
         <a href="#" class="off" title="coming soon" aria-disabled="true">pump.fun</a>
-        <a href="https://swearjar.fun" target="_blank" rel="noopener">swearjar.fun</a>
+        <a href="https://jartoken.xyz" target="_blank" rel="noopener">jartoken.xyz</a>
       </span>
     </div>
   </nav>
@@ -365,21 +365,21 @@
     <button class="shut" data-shut>shut the door ✕</button>
     <h2>House rules of this kitchen</h2>
     <ol>
-      <li>There is no tax in this kitchen. <b>All</b> of the pump.fun creator fees on <b>$JAR</b> go into the jar, a public wallet. Trading here costs you nothing more than any other coin on pump.fun.</li>
-      <li>A <b>sell</b> is a swear. I will read it aloud, with your wallet shortened, because I am not a monster. That wallet loses its share for the day.</li>
+      <li>There is no tax in this kitchen. <b>All</b> of the pump.fun creator fees on <b>$JAR</b> go into the jar, a public wallet: 0.30% of every trade on the bonding curve, and after graduation to PumpSwap up to 0.95%, less as the market cap grows. Trading here costs you nothing more than any other coin on pump.fun.</li>
+      <li>A <b>sell</b> is a swear. I will read it aloud, with your wallet shortened, because I am not a monster. That wallet gets no drops for the next <b>24 hours</b>, and whatever was waiting in its balance goes back into the jar.</li>
       <li>A <b>buy</b> is saying grace. Nobody is scolded for it, and buying more is perfectly fine.</li>
-      <li>At <b>00:00 UTC</b> I empty the jar. Every penny, in SOL, goes to the clean mouths: wallets holding <b>100,000 $JAR</b> or more that did not sell that day.</li>
+      <li>Every <b>15 minutes</b> the jar drops SOL, pro rata, to the clean mouths: wallets holding <b>100,000 $JAR</b> or more that have not sold in the last 24 hours.</li>
       <li>Moving your tokens out of your wallet counts as a sell. I cannot tell a cousin from a stranger, dear.</li>
       <li>No running, no leverage, no "ser".</li>
     </ol>
-    <p class="fine">The bonding curve, the pool, the dev wallet and the burn wallet do not get a share. A share smaller than 0.001 SOL waits in the jar for tomorrow.</p>
+    <p class="fine">The bonding curve, the pool, the dev wallet and the burn wallet do not get a share. Each drop adds your share to your balance, and I send it as soon as it reaches 0.001 SOL. Smaller amounts keep adding up for you; they are not lost and not given to anyone else.</p>
     <p class="sig">— Sr. Agnes</p>
   </section>
 
   <section class="inside" id="p-confess">
     <button class="shut" data-shut>shut the door ✕</button>
     <h2>The confession box</h2>
-    <p>Paste your wallet. I will count your swears today. <span class="demo">DEMO</span></p>
+    <p>Paste your wallet. I will count your swears and tell you when your next drop comes. <span class="demo">DEMO</span></p>
     <form class="booth" id="booth">
       <input id="wallet" placeholder="your Solana wallet, child" autocomplete="off" spellcheck="false">
       <button class="btn" type="submit">confess</button>
@@ -389,9 +389,10 @@
       <b class="hand" style="font-size:22px">Parish kitchen · report card</b>
       <table>
         <tr><td>wallet</td><td id="r-w">—</td></tr>
-        <tr><td>swears today (sells)</td><td id="r-s">—</td></tr>
+        <tr><td>recent swears (sells)</td><td id="r-s">—</td></tr>
         <tr><td>kind words (buys)</td><td id="r-b">—</td></tr>
-        <tr><td>today's share</td><td id="r-e">—</td></tr>
+        <tr><td>next drop</td><td id="r-e">—</td></tr>
+        <tr id="r-owed-row" hidden><td>waiting in your balance</td><td id="r-owed">—</td></tr>
       </table>
       <p class="hand" id="r-v" style="font-size:21px;color:var(--red);margin:8px 0 0"></p>
       <p class="fine" style="margin:4px 0 0">Demo card: numbers are made up from your address. The real box will read the chain.</p>
@@ -415,15 +416,15 @@
 
   <section class="inside" id="p-bless">
     <button class="shut" data-shut>shut the door ✕</button>
-    <h2>Collection at midnight</h2>
-    <p>One jar, one rule. At 00:00 UTC the whole jar is emptied in SOL, pro rata, to every clean mouth: a wallet holding 100,000 $JAR or more that did not sell that day. No burn, no split, nothing kept back.</p>
+    <h2>The drop, every 15 minutes</h2>
+    <p>One jar, one rule. Every 15 minutes the jar drops SOL, pro rata, to every clean mouth: a wallet holding 100,000 $JAR or more that has not sold in the last 24 hours. No burn, no split, nothing kept back.</p>
     <div class="splits">
       <div class="mini"><div class="mj"><i id="m1"></i></div><b id="b1">—</b><span>SOL in the jar<br>(demo)</span></div>
       <div class="mini"><div class="mj"><i id="m2"></i></div><b id="b2">—</b><span>clean mouths<br>get it all (demo)</span></div>
-      <div class="mini"><div class="mj"><i id="m3"></i></div><b id="b3">—</b><span>swore today<br>get nothing (demo)</span></div>
+      <div class="mini"><div class="mj"><i id="m3"></i></div><b id="b3">—</b><span>swore in 24h<br>get nothing (demo)</span></div>
     </div>
-    <div class="row"><button class="btn red" id="empty">empty the jar <span class="demo" style="background:#fff">DEMO</span></button></div>
-    <p class="fine" id="emptyOut" style="margin-top:8px">Paid from the jar's public wallet, in batches, with every tx posted. A share smaller than 0.001 SOL is not lost; it waits in the jar for tomorrow's collection.</p>
+    <div class="row"><button class="btn red" id="empty">drop now <span class="demo" style="background:#fff">DEMO</span></button></div>
+    <p class="fine" id="emptyOut" style="margin-top:8px">Paid from the jar's public wallet, with every tx posted. Each drop adds your share to your balance; it is sent as soon as it reaches 0.001 SOL. Smaller amounts keep adding up for you. They are not lost, and they are not given to anyone else.</p>
     <p class="sig">— Sr. Agnes</p>
     <div class="addon-calc" id="calc">
       <h3 class="hand">What is my share if I hold my tongue?</h3>
@@ -434,12 +435,12 @@
         <label>clean supply, $JAR<input id="c-elig" inputmode="numeric" autocomplete="off" value="300,000,000"></label>
       </div>
       <div class="calc-out" aria-live="polite">
-        <div><span>today's share</span><b id="c-day">—</b></div>
-        <div><span>× 30, a quiet month (same jar every day)</span><b id="c-month">—</b></div>
+        <div><span>per drop (estimate)</span><b id="c-day">—</b></div>
+        <div><span id="c-month-l">per day (96 drops, same jar)</span><b id="c-month">—</b></div>
       </div>
       <p class="hand calc-msg" id="c-msg"></p>
-      <p class="fine calc-formula" id="c-formula">share = jar × my $JAR ÷ clean supply</p>
-      <p class="fine">Clean supply = all $JAR held by wallets with 100,000 or more that did not sell today. The jar size follows the live jar until you change it. <span class="demo">DEMO</span></p>
+      <p class="fine calc-formula" id="c-formula">per drop = jar × my $JAR ÷ clean supply</p>
+      <p class="fine">Clean supply = all $JAR held by wallets with 100,000 or more that have not sold in the last 24 hours. The jar size follows the live jar until you change it. <span class="demo">DEMO</span></p>
     </div>
   </section>
 
@@ -452,12 +453,12 @@
       <tr><td>CA</td><td><b>[coming soon]</b> (written on the lid, in pencil)</td></tr>
       <tr><td>supply</td><td>1,000,000,000 (fixed by pump.fun)</td></tr>
       <tr><td>tax</td><td>none. A normal pump.fun coin; you pay what you pay anywhere else.</td></tr>
-      <tr><td>fees</td><td>100% of the pump.fun creator fees go into the jar, a public wallet</td></tr>
-      <tr><td>swear bot</td><td>every sell is read aloud on X; that wallet loses its share for the day</td></tr>
-      <tr><td>collection</td><td>daily at 00:00 UTC, in SOL, pro rata to every wallet holding ≥ 100,000 $JAR that did not sell that day</td></tr>
+      <tr><td>fees</td><td>100% of the pump.fun creator fees go into the jar, a public wallet: 0.30% per trade on the bonding curve; after graduation to PumpSwap up to 0.95%, decreasing with market cap</td></tr>
+      <tr><td>swear bot</td><td>every sell is read aloud on X; that wallet gets no drops for 24 hours and its unpaid balance goes back into the jar</td></tr>
+      <tr><td>the drop</td><td>every 15 minutes, in SOL, pro rata to every wallet holding ≥ 100,000 $JAR with no sells in the last 24 hours</td></tr>
       <tr><td>left out</td><td>bonding curve, pool, dev and burn wallets. Moving tokens out of a wallet counts as a sell (v1).</td></tr>
-      <tr><td>leftovers</td><td>shares under 0.001 SOL carry over to the next day</td></tr>
-      <tr><td>letters</td><td>@theswearjarsol · swearjar.fun</td></tr>
+      <tr><td>balance</td><td>each drop adds your share to your balance; it is sent once it reaches 0.001 SOL. Smaller amounts keep adding up: never lost, never given to others.</td></tr>
+      <tr><td>letters</td><td>@theswearjarsol · jartoken.xyz</td></tr>
     </table>
     <p class="fine" style="margin-top:8px">A joke with a real mechanic. Not a church, not an order, not financial advice. Sister Agnes is a character; she would tell you to save your money.</p>
   </section>
@@ -467,13 +468,13 @@
     <div class="hx-col">
     <div class="note">
       <p class="hx-kick">the swear jar · $JAR · on pump.fun</p>
-      <h1 class="hx-head">Every sell is a swear. Hold <span class="hx-tk">$JAR</span>, keep quiet, get paid <span class="hx-sol">SOL</span> every midnight.</h1>
+      <h1 class="hx-head">Every sell is a swear. Hold <span class="hx-tk">$JAR</span>, keep quiet, get <span class="hx-sol">SOL</span> every 15 minutes.</h1>
       <p class="sig">— Sr. Agnes</p>
     </div>
     <ol class="hx-flow" aria-label="How the jar works, in three steps">
       <li class="hx-card"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="9" width="22" height="19" rx="5" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="7" y="4" width="18" height="5" rx="1.5" fill="#b3342c"/><ellipse cx="16" cy="22" rx="6" ry="2.6" fill="#d9a23a" stroke="#8a5f14" stroke-width="1.4"/><path d="M16 11v6m-2.5-2.5L16 17l2.5-2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span><b>1</b> Every trade pays a creator fee <i>→</i> into the jar.</span></li>
-      <li class="hx-card"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 6h22v14H14l-6 6v-6H5z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M12 10l8 6m0-6l-8 6" stroke="#b3342c" stroke-width="2.6" stroke-linecap="round"/></svg><span><b>2</b> Sell = swear <i>→</i> no share today.</span></li>
-      <li class="hx-card"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="18" r="10.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M16 18v-6.5m0 6.5l4.5 2.8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M12 3.5h8" stroke="#b3342c" stroke-width="2.6" stroke-linecap="round"/></svg><span><b>3</b> 00:00 UTC <i>→</i> the jar is split among clean mouths (≥100,000 $JAR).</span></li>
+      <li class="hx-card"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 6h22v14H14l-6 6v-6H5z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M12 10l8 6m0-6l-8 6" stroke="#b3342c" stroke-width="2.6" stroke-linecap="round"/></svg><span><b>2</b> Sell = swear <i>→</i> no drops for 24 hours.</span></li>
+      <li class="hx-card"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="18" r="10.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M16 18v-6.5m0 6.5l4.5 2.8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M12 3.5h8" stroke="#b3342c" stroke-width="2.6" stroke-linecap="round"/></svg><span><b>3</b> Every 15 minutes <i>→</i> the jar drops SOL to clean mouths (≥100,000 $JAR, no sells in 24h).</span></li>
     </ol>
     </div>
     <span class="hook"></span>
@@ -482,11 +483,11 @@
 
     <div class="jarwrap" id="jarwrap">
       <div class="hx-meter">
-        <div class="hx-timer" role="timer" aria-label="Time until the jar is emptied at 00:00 UTC"><span class="hx-tl">collection at 00:00 UTC in</span><b id="hxClock">--:--:--</b></div>
+        <div class="hx-timer" role="timer" aria-label="Time until the next drop from the jar"><span class="hx-tl">next drop in</span><b id="hxClock">--:--</b></div>
         <ul class="hx-stats">
           <li id="hxS1"><b id="hxSol">—</b><span>SOL in the jar <em>(demo)</em></span></li>
           <li id="hxS2"><b id="hxClean">—</b><span>clean mouths <em>(demo)</em></span></li>
-          <li id="hxS3" class="hx-bad"><b id="hxSin">—</b><span>swore today <em>(demo)</em></span></li>
+          <li id="hxS3" class="hx-bad"><b id="hxSin">—</b><span>swore in 24h <em>(demo)</em></span></li>
         </ul>
       </div>
       <div class="lid"><span class="slot"></span><span class="ca">$JAR · CA: [coming soon]</span></div>
@@ -502,11 +503,11 @@
   <!-- counter -->
   <div class="counter">
     <div class="ledger">
-      <h3><span>Sister's ledger · today</span><span class="demo">DEMO FEED</span></h3>
+      <h3><span>Sister's ledger · latest</span><span class="demo">DEMO FEED</span></h3>
       <ul id="ledger"></ul>
     </div>
     <div class="tray">
-      <div class="card"><b>Practice at the counter</b><br>Try both. Either way, the creator fee drops into the jar. A kind word (a buy) keeps you on tonight's list. The s-word (a sell) gets read aloud, and that wallet gets no share at 00:00 UTC. <span class="demo">DEMO</span></div>
+      <div class="card"><b>Practice at the counter</b><br>Try both. Either way, the creator fee drops into the jar. A kind word (a buy) keeps you on the list for the next drop. The s-word (a sell) gets read aloud, and that wallet gets no drops for 24 hours. <span class="demo">DEMO</span></div>
       <div class="row">
         <button class="btn coinbtn silver" id="doBuy">say something kind (buy)</button>
         <button class="btn coinbtn" id="doSell">say the s-word (sell)</button>
@@ -700,22 +701,28 @@
     if (window.JAR_LIVE){
       fetch("/api/wallet/" + encodeURIComponent(w), {cache: "no-store"}).then(function(r){ return r.json(); }).then(function(d){
         if (d.error){ say(d.error); return; }
-        var share = d.eligible ? "eligible at 00:00 UTC · about " + d.estShareSol.toFixed(4) + " SOL (estimate)" + (d.estShareSol < 0.001 ? ", under 0.001 SOL: it waits in the jar for tomorrow" : "")
-          : d.swore ? "not today" : "not on the list: under " + (100000).toLocaleString("en-US") + " $JAR";
-        report(short, d.swearsToday, (d.today.buy && d.today.buy.count) || 0, share);
+        var est = +d.estShareSol || 0, owed = +d.owedSol || 0;
+        var until = d.blockedUntil ? new Date(d.blockedUntil) : null;
+        if (until && (isNaN(until.getTime()) || until.getTime() <= Date.now())) until = null;
+        var share = d.eligible ? "on the list · about " + est.toFixed(4) + " SOL (estimate)" + (est + owed < 0.001 ? ", under 0.001 SOL: it adds up in your balance until it reaches 0.001" : "")
+          : (d.swore || until) ? (until ? "no drops until " + clock(until.getTime()) + (until.toDateString() !== new Date().toDateString() ? " tomorrow" : "") : "no drops for 24 hours")
+          : "not on the list: under " + (100000).toLocaleString("en-US") + " $JAR";
+        report(short, d.swearsToday, (d.today && d.today.buy && d.today.buy.count) || 0, share, owed);
       }).catch(function(){ say("The ledger is in the other room, dear. Try again in a moment."); });
       return;
     }
     var h = hashStr(w);
     var sells = h % 6 < 3 ? 0 : (h % 5) + 1;
     var buys = (h >> 5) % 9 + 1;
-    report(short, sells, buys, sells === 0 ? "eligible at 00:00 UTC" : "not today");
+    report(short, sells, buys, sells === 0 ? "on the list for the next drop" : "no drops for 24 hours");
   });
-  function report(short, sells, buys, share){
+  function report(short, sells, buys, share, owed){
     $("r-w").textContent = short;
     $("r-s").textContent = sells;
     $("r-b").textContent = buys;
     $("r-e").textContent = share;
+    $("r-owed-row").hidden = !(owed > 0);
+    $("r-owed").textContent = owed > 0 ? owed.toFixed(owed < 0.001 ? 6 : 4) + " SOL (sent once it reaches 0.001)" : "—";
     var grades = ["A+", "B", "C", "D", "D-", "F"];
     $("grade").textContent = grades[Math.min(sells, 5)];
     var verdict = sells === 0 ? "Bless you, diamond hands. Not one swear."
@@ -741,18 +748,18 @@
   $("empty").addEventListener("click", function(){
     var total = JAR_STATE.sol, mouths = JAR_STATE.clean || 1;
     var each = total / mouths;
-    var carry = each < 0.001 ? total : 0;
-    $("emptyOut").textContent = carry
-      ? "Only " + total.toFixed(3) + " SOL (demo) in the jar: under 0.001 SOL each for " + mouths.toLocaleString("en-US") + " clean mouths. It carries over to tomorrow. Patience, dear."
-      : "Emptied " + total.toFixed(3) + " SOL (demo), all of it, to " + mouths.toLocaleString("en-US") + " clean mouths (demo): about " + each.toFixed(4) +
-        " SOL per average wallet, more for bigger holders, pro rata. The " + JAR_STATE.sinners.toLocaleString("en-US") + " who swore today get nothing. Any share under 0.001 SOL stays in the jar for tomorrow. Count it. Then say thank you.";
-    JAR_STATE.sol = carry; JAR_STATE.sinners = 0;
+    var small = each < 0.001;
+    $("emptyOut").textContent = small
+      ? "Dropped " + total.toFixed(3) + " SOL (demo) to " + mouths.toLocaleString("en-US") + " clean mouths: under 0.001 SOL each. It is not lost, dear. It adds up in each balance and is sent once it reaches 0.001 SOL. Patience."
+      : "Dropped " + total.toFixed(3) + " SOL (demo), all of it, to " + mouths.toLocaleString("en-US") + " clean mouths (demo): about " + each.toFixed(4) +
+        " SOL per average wallet, more for bigger holders, pro rata. The " + JAR_STATE.sinners.toLocaleString("en-US") + " who swore in the last 24 hours get nothing. Any balance under 0.001 SOL keeps adding up until it can be sent. Count it. Then say thank you.";
+    JAR_STATE.sol = 0;
     setLevel();
-    if (!carry){ $("pile").innerHTML = ""; pileCount = 0; $("strips").innerHTML = ""; }
-    say(carry ? "Not enough for a proper share. It waits for tomorrow." : "Emptied. Bless you, clean mouths. Count it, then say thank you.");
-    $("m1").style.height="0"; $("m3").style.height="0";
+    $("pile").innerHTML = ""; pileCount = 0; $("strips").innerHTML = "";
+    say(small ? "A small drop. It waits in your balance until it is worth sending." : "Dropped. Bless you, clean mouths. The next one is in 15 minutes.");
+    $("m1").style.height="0";
     setTimeout(fillMinis, 900);
-    document.dispatchEvent(new CustomEvent("jar:empty", {detail:{sol: total, clean: mouths, carry: carry}}));
+    document.dispatchEvent(new CustomEvent("jar:empty", {detail:{sol: total, clean: mouths, carry: 0, small: small}}));
   });
 })();
 </script>
@@ -774,16 +781,15 @@
     if (d.wallet !== PRACTICE) return;
     if (d.kind === "sell"){
       sworeAt = hhmm();
-      show(PRACTICE + " swore at " + sworeAt + ". No share for you tonight. Buy all you like; just don't sell.", "sell");
+      show(PRACTICE + " swore at " + sworeAt + ". No drops for 24 hours, and your unpaid balance goes back into the jar. Buy all you like; just don't sell.", "sell");
     } else if (sworeAt){
-      show("Kind words, but " + PRACTICE + " already swore at " + sworeAt + ". Still no share tonight. Try again tomorrow.", "sell");
+      show("Kind words, but " + PRACTICE + " already swore at " + sworeAt + ". Still no drops until 24 hours have passed.", "sell");
     } else {
-      show("Kind words. You are still on tonight's list.", "buy");
+      show("Kind words. You are still on the list for the next drop.", "buy");
     }
   });
-  document.addEventListener("jar:empty", function(e){
-    if (e.detail && e.detail.carry) return;
-    if (sworeAt){ sworeAt = null; show("The jar was emptied. A new day, a clean slate. Mind your language.", "buy"); }
+  document.addEventListener("jar:empty", function(){
+    if (sworeAt) show("The jar dropped without you, dear. " + PRACTICE + " swore at " + sworeAt + "; no drops until 24 hours have passed.", "sell");
   });
 })();
 </script>
@@ -793,12 +799,20 @@
   var $ = function(id){ return document.getElementById(id); };
   function pad(n){ return (n < 10 ? "0" : "") + n; }
 
-  // ---------- countdown to the next 00:00 UTC ----------
+  // ---------- countdown to the next drop ----------
+  // Live: window.JAR_NEXT_DROP (ms, from /api/state nextCollection, set by addon-live-js).
+  // Otherwise (or once that time has passed): the next UTC boundary of window.JAR_EVERY_MIN (default 15) minutes.
+  function nextDrop(now){
+    var live = window.JAR_LIVE && +window.JAR_NEXT_DROP;
+    if (live && live > now) return live;
+    var step = Math.max(1, +window.JAR_EVERY_MIN || 15) * 60000;
+    return Math.floor(now / step) * step + step;
+  }
   function tick(){
-    var now = Date.now(), d = new Date(now);
-    var next = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1);
-    var s = Math.max(0, Math.floor((next - now) / 1000));
-    $("hxClock").textContent = pad(Math.floor(s / 3600)) + ":" + pad(Math.floor(s % 3600 / 60)) + ":" + pad(s % 60);
+    var now = Date.now();
+    var s = Math.max(0, Math.floor((nextDrop(now) - now) / 1000));
+    var h = Math.floor(s / 3600);
+    $("hxClock").textContent = (h > 0 ? pad(h) + ":" : "") + pad(Math.floor(s % 3600 / 60)) + ":" + pad(s % 60);
     setTimeout(tick, 1000 - (Date.now() % 1000) + 5);
   }
   tick();
@@ -965,9 +979,11 @@
     if (!isFinite(my) || !isFinite(jar) || !isFinite(elig) || my < 0 || jar < 0 || elig <= 0){
       day.textContent = month.textContent = "—";
       msg.textContent = "Numbers only, dear. Plain ones, no letters.";
-      f.textContent = "share = jar × my $JAR ÷ clean supply";
+      f.textContent = "per drop = jar × my $JAR ÷ clean supply";
       return;
     }
+    var everyMin = Math.max(1, +window.JAR_EVERY_MIN || 15), drops = Math.round(1440 / everyMin);
+    if ($("c-month-l")) $("c-month-l").textContent = "per day (" + drops + " drops, same jar)";
     var note = "";
     if (my > SUPPLY){ my = SUPPLY; note = "There are only 1,000,000,000 $JAR in the whole kitchen, dear. "; }
     if (elig > SUPPLY){ elig = SUPPLY; note += "The clean supply cannot be more than all of it. "; }
@@ -975,18 +991,18 @@
     if (my < MIN_HOLD){
       day.textContent = "0 SOL"; month.textContent = "0 SOL";
       msg.textContent = note + "Under 100,000 $JAR, dear, you are not on the list yet.";
-      f.textContent = "share = 0, because " + fmtInt(my) + " $JAR is under the 100,000 minimum";
+      f.textContent = "per drop = 0, because " + fmtInt(my) + " $JAR is under the 100,000 minimum";
       return;
     }
     var share = jar * my / elig;
     day.textContent = fmtSol(share);
-    month.textContent = fmtSol(share * 30);
-    f.textContent = "share = jar × my $JAR ÷ clean supply = " + jar.toFixed(3) + " × " + fmtInt(my) + " ÷ " + fmtInt(elig) + " = " + fmtSol(share);
+    month.textContent = fmtSol(share * drops);
+    f.textContent = "per drop = jar × my $JAR ÷ clean supply = " + jar.toFixed(3) + " × " + fmtInt(my) + " ÷ " + fmtInt(elig) + " = " + fmtSol(share) + " · per day = × " + drops;
     msg.textContent = note + (share === 0
       ? "An empty jar pays nothing. Patience, dear."
       : share < DUST
-        ? "Under 0.001 SOL. It is not lost; it carries over to tomorrow."
-        : "Hold your tongue until midnight and that is roughly yours. Roughly, dear.");
+        ? "Under 0.001 SOL: it adds up in your balance and is sent once it reaches 0.001. Nothing is lost, dear."
+        : "Hold your tongue for the next drop and that is roughly yours. Roughly, dear.");
   }
   if ($("calc")){
     syncJar();
@@ -1081,7 +1097,7 @@
     seal(ctx, W / 2, 620, 74);                                  // seal, middle
     ctx.textAlign = "center";
     ctx.fillStyle = "#1f2a44"; ctx.font = "bold 22px " + SANS;
-    ctx.fillText("$JAR · swearjar.fun", W / 2, 730);
+    ctx.fillText("$JAR · jartoken.xyz", W / 2, 730);
     ctx.fillStyle = "#8a7a5a"; ctx.font = "15px " + SANS;
     ctx.fillText("demo — not checked against the chain yet · a joke, not a sacrament, not financial advice", W / 2, 754);
   }
@@ -1144,7 +1160,11 @@
   function short(w){ return w.slice(0,4) + "…" + w.slice(-4); }
   function sync(st){
     var S = window.JAR_STATE;
-    S.sol = st.jarSol; S.clean = st.cleanCount; S.sinners = st.sinnersToday;
+    S.sol = st.jarSol; S.clean = st.cleanCount; S.sinners = st.blockedNow ?? st.sinnersToday;
+    var nd = st.nextCollection ? new Date(st.nextCollection).getTime() : NaN;
+    if (isFinite(nd)) window.JAR_NEXT_DROP = nd;
+    if (+st.payoutEveryMin > 0) window.JAR_EVERY_MIN = +st.payoutEveryMin;
+    if (+st.sinWindowHours > 0) window.JAR_SIN_HOURS = +st.sinWindowHours;
     window.JAR_REFRESH && window.JAR_REFRESH();
     document.dispatchEvent(new CustomEvent("jar:trade", {detail: {kind: "sync", wallet: "", sol: S.sol}}));
   }
@@ -1152,7 +1172,9 @@
     var badge = document.querySelector(".ledger h3 .demo");
     if (badge) badge.textContent = st.demo ? "LIVE · TEST DATA" : "LIVE";
     var fine = $("report") && $("report").querySelector(".fine");
-    if (fine) fine.textContent = st.demo ? "Read from the backend ledger (test data, mock mode)." : "Read from the chain. Today means since 00:00 UTC.";
+    if (fine) fine.textContent = st.demo ? "Read from the backend ledger (test data, mock mode)." : "Read from the chain. A sell keeps a wallet out of the drops for 24 hours.";
+    var eb = $("empty");
+    if (eb && eb.firstChild && eb.firstChild.nodeType === 3) eb.firstChild.nodeValue = "show the last drop ";
     if (!st.demo){
       window.JAR_REAL = true;
       document.documentElement.classList.add("jar-real");
@@ -1187,15 +1209,16 @@
     });
   }).catch(function(){ /* no backend: stay in demo mode */ });
 
-  // In live mode the jar empties itself at midnight; the button shows the last real collection instead.
+  // In live mode the jar drops by itself every few minutes; the button shows the last real drop instead.
   document.addEventListener("click", function(ev){
     if (!window.JAR_LIVE || !ev.target.closest || !ev.target.closest("#empty")) return;
     ev.stopImmediatePropagation(); ev.preventDefault();
+    var every = "every " + (window.JAR_EVERY_MIN || 15) + " minutes";
     get("/collections").then(function(list){
       var c = list.filter(function(x){ return x.status === "paid"; })[0];
       $("emptyOut").textContent = c
-        ? "Last collection, " + c.day + ": " + c.paid_sol.toFixed(3) + " SOL to " + c.paid_count.toLocaleString("en-US") + " clean mouths. " + c.sinner_count + " wallets swore and got nothing. The jar empties itself at 00:00 UTC; I do not need your help, dear."
-        : "No collection has been paid yet. The jar empties itself at 00:00 UTC; I do not need your help, dear.";
+        ? "Last drop: " + c.day + ", " + (+c.paid_sol || 0).toFixed(3) + " SOL to " + (+c.paid_count || 0).toLocaleString("en-US") + " clean mouths. " + c.sinner_count + " wallets swore and got nothing. The jar drops by itself " + every + "; I do not need your help, dear."
+        : "No drop has been paid yet. The jar drops by itself " + every + "; I do not need your help, dear.";
     }).catch(function(){});
   }, true);
 })();

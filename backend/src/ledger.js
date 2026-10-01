@@ -6,9 +6,34 @@ const { dayOf } = require("./db");
 function makeLedger({ q, excluded, onSwear, onEvent }) {
   const isExcluded = (w) => !w || excluded.has(w);
 
-  function parse(tx) {
+  // Primary: the net $JAR balance change of every OWNER in the tx (accountData.tokenBalanceChanges) — ground truth.
+  // tokenTransfers name the transfer AUTHORITY as "fromUserAccount", which is wrong for delegated sells and routers
+  // (seen on mainnet: a delegate sold 1.9M tokens out of someone else's account via a temp account).
+  // Fallback for payloads without accountData: the tokenTransfers list.
+  function parseByBalances(tx, ts) {
+    const net = new Map();
+    for (const a of tx.accountData || []) for (const c of a.tokenBalanceChanges || []) {
+      if (c.mint !== cfg.mint || !c.userAccount) continue;
+      const raw = c.rawTokenAmount || {};
+      net.set(c.userAccount, (net.get(c.userAccount) || 0) + Number(raw.tokenAmount || 0) / 10 ** (raw.decimals ?? cfg.decimals));
+    }
+    if (!net.size) return null;
+    const exGained = [...net].some(([w, d]) => isExcluded(w) && d > 0);
+    const exLost = [...net].some(([w, d]) => isExcluded(w) && d < 0);
     const events = [];
+    for (const [w, d] of net) {
+      if (isExcluded(w) || Math.abs(d) < 1e-9) continue;
+      if (d < 0) events.push({ sig: tx.signature, wallet: w, kind: exGained || tx.type === "SWAP" ? "sell" : "transfer", tokens: -d, ts });
+      else if (exLost || tx.type === "SWAP") events.push({ sig: tx.signature, wallet: w, kind: "buy", tokens: d, ts });
+    }
+    return events;
+  }
+
+  function parse(tx) {
     const ts = (tx.timestamp || Math.floor(Date.now() / 1000)) * 1000;
+    const byBalances = parseByBalances(tx, ts);
+    if (byBalances) return byBalances;
+    const events = [];
     for (const t of tx.tokenTransfers || []) {
       if (t.mint !== cfg.mint) continue;
       const tokens = Number(t.tokenAmount) || 0;
@@ -36,6 +61,7 @@ function makeLedger({ q, excluded, onSwear, onEvent }) {
       if (e.kind !== "buy") {
         const before = q.isSinner.get(day, e.wallet);
         q.insertSinner.run(day, e.wallet, e.sig, e.ts);
+        q.owedForfeit?.run(Date.now(), e.wallet); // a swear forfeits the unpaid balance back into the jar
         onSwear?.(e, { firstToday: !before });
       }
       onEvent?.(e);

@@ -95,8 +95,14 @@ const rnd = (a) => a[Math.floor(Math.random() * a.length)];
   todayTx.push(tx("SWAP", curve, cleanBuyer.owner, 3e5, nowS));
   await hook(todayTx);
   check("today's sinners kept separately from yesterday's", q.sinnersOf.all(TODAY).length === 20 && q.sinnersOf.all(YDAY).length === sinnersY.size);
-  const wS = (await req("GET", "/api/wallet/" + [...sinnersY][25])).body;
-  check("/api/wallet: yesterday's sinner who is quiet today -> swore false today", wS.swore === false, JSON.stringify({ swore: wS.swore, eligible: wS.eligible }));
+  // 24h rolling window: a sell 25h ago no longer blocks drops, a sell 2h ago does (until sell + 24h)
+  const oldSeller = holders.find((h) => h.tokens >= 300000 && !sinnersY.has(h.owner) && h.owner !== cleanBuyer.owner);
+  const newSeller = holders.find((h) => h.tokens >= 300000 && !sinnersY.has(h.owner) && h.owner !== cleanBuyer.owner && h.owner !== oldSeller.owner);
+  await hook([tx("SWAP", oldSeller.owner, curve, 1e4, nowS - 25 * 3600), tx("SWAP", newSeller.owner, curve, 1e4, nowS - 2 * 3600)]);
+  for (const [w, t] of [[oldSeller.owner, nowS - 25 * 3600], [newSeller.owner, nowS - 2 * 3600]]) if (dayOf(t * 1000) === YDAY) sinnersY.add(w); // falls in yesterday's window
+  const wOld = (await req("GET", "/api/wallet/" + oldSeller.owner)).body, wNew = (await req("GET", "/api/wallet/" + newSeller.owner)).body;
+  check("sell 25h ago -> drops again (window passed)", wOld.swore === false && wOld.eligible === true);
+  check("sell 2h ago -> blocked, blockedUntil = sell + 24h", wNew.swore === true && !wNew.eligible && Math.abs(Date.parse(wNew.blockedUntil) - (nowS - 2 * 3600 + 24 * 3600) * 1000) < 2000, wNew.blockedUntil);
   const wB = (await req("GET", "/api/wallet/" + cleanBuyer.owner)).body;
   check("/api/wallet: clean buyer -> eligible, estimate > 0", wB.eligible && wB.estShareSol > 0, wB.estShareSol.toFixed(5) + " SOL");
 
@@ -123,7 +129,7 @@ const rnd = (a) => a[Math.floor(Math.random() * a.length)];
   check("paid + fees + carry == jar - reserve", Math.abs(dry.paidSol + Math.ceil(rows.length / cfg.batchSize) * 5e-6 + dry.carrySol - (jarBefore - cfg.reserveSol)) < 1e-9, `paid ${dry.paidSol.toFixed(4)} carry ${dry.carrySol.toFixed(4)}`);
   check("bigger holder gets more (pro rata)", (() => { const s = rows.slice().sort((a, b) => a.tokens - b.tokens); return s.every((r, i) => !i || r.lamports >= s[i - 1].lamports); })());
   check("jar untouched by dry run", (await chain.jarSol()) === jarBefore);
-  check("dry run posts only a preview (nothing to Telegram/X)", q.outboxLast.all(2).every((m) => m.status === "preview"));
+  check("dry run posts only a preview (nothing to Telegram/X)", q.outboxLast.all(1)[0].status === "preview" && q.outboxLast.all(1)[0].channel === "telegram");
 
   const both = await Promise.allSettled([collector.collect({ day: YDAY, send: true }), collector.collect({ day: YDAY, send: true })]);
   check("two collections at the same time -> second refused", both.filter((r) => r.status === "rejected").length === 1);
@@ -134,7 +140,7 @@ const rnd = (a) => a[Math.floor(Math.random() * a.length)];
   const again = await collector.collect({ day: YDAY, send: true });
   check("third run -> 'already paid', nothing sent", again.skipped === "already paid");
   check("web collect for a paid day -> also refuses", (await admin("POST", "/admin/collect", { day: YDAY })).body.skipped === "already paid");
-  check("collection message went out (not preview)", q.outboxLast.all(2).some((m) => m.status === "log" && /emptied/.test(m.text)));
+  check("drop message went out (not preview), X summary too", q.outboxLast.all(3).some((m) => m.status === "log" && m.channel === "telegram" && /Drop at/.test(m.text)) && q.outboxLast.all(3).some((m) => m.channel === "x" && /dropped again/.test(m.text)));
 
   // ---------- 5. failures mid-payout: nobody is paid twice, nobody is shorted ----------
   const realPay = chain.pay, realJar = chain.jarSol;
@@ -201,6 +207,51 @@ const rnd = (a) => a[Math.floor(Math.random() * a.length)];
   chain.pay = realPay; chain.jarSol = realJar;
 
 
+  // ---------- 5d. drops every 15 min with personal balances ----------
+  console.log("\n== 5d. drops: small shares accrue as balances, a sell forfeits the balance, the jar always covers all balances");
+  {
+    const realPay2 = chain.pay, realJar2 = chain.jarSol;
+    let jar = 0;
+    chain.jarSol = async () => jar;
+    chain.pay = async (list, hooks) => { const res = await realPay2(list, hooks); jar -= list.reduce((s, p) => s + p.lamports, 0) / 1e9; return res; };
+    db.exec("DELETE FROM owed");
+    const owedNow = () => new Map(q.owedAll.all().map((r) => [r.wallet, r.lamports]));
+    const owedSum = () => q.owedTotal.get().n;
+    const covered = () => Math.round(jar * 1e9) >= 0.01 * 1e9 + owedSum() - 1;
+
+    jar = 0.01 + 0.4; // reserve + a small pot: only the biggest holders clear 0.001 SOL, the rest accrue
+    const A = await collector.collect({ day: "2099-06-01T10:00", send: true });
+    const owedA = owedNow();
+    const paidA = new Set(q.payoutsOf.all("2099-06-01T10:00").map((p) => p.wallet));
+    check("drop A: big holders paid, small shares kept as balances", A.status === "paid" && paidA.size > 0 && owedA.size > paidA.size, `${paidA.size} paid, ${owedA.size} wallets with a balance`);
+    check("drop A: nobody paid has a leftover balance", [...paidA].every((w) => !owedA.get(w)));
+    check("drop A: jar covers reserve + all balances", covered(), `jar ${jar.toFixed(5)} SOL, balances ${(owedSum() / 1e9).toFixed(5)} SOL`);
+
+    const victim = [...owedA.entries()].sort((a, b) => b[1] - a[1]).find(([w]) => !paidA.has(w));
+    await hook([tx("SWAP", victim[0], curve, 1e4, nowS)]);
+    check("a sell forfeits the unpaid balance back into the jar", !owedNow().get(victim[0]), `${victim[1]} lamports forfeited`);
+
+    jar += 0.15; // more fees came in
+    const before = owedNow();
+    const B = await collector.collect({ day: "2099-06-01T10:15", send: true });
+    const rowsB = q.payoutsOf.all("2099-06-01T10:15");
+    const afterB = owedNow();
+    const grew = [...before.keys()].filter((w) => !rowsB.some((r) => r.wallet === w) && (afterB.get(w) || 0) > before.get(w));
+    const settled = rowsB.filter((r) => (before.get(r.wallet) || 0) > 0);
+    check("drop B: balances that reached 0.001 SOL were paid in full (old balance + new share)", settled.length > 0 && settled.every((r) => r.lamports >= before.get(r.wallet) + 1 && !afterB.get(r.wallet)), `${settled.length} wallets paid their accumulated balance`);
+    check("drop B: balances still under 0.001 SOL kept growing", grew.length > 0, `${grew.length} wallets`);
+    check("drop B: the forfeited wallet got nothing (and nothing new: its sell is 24h-blocked only for its own window)", !rowsB.some((r) => r.wallet === victim[0]) || rowsB.find((r) => r.wallet === victim[0]).lamports < victim[1]);
+    check("drop B: jar covers reserve + all balances", covered(), `jar ${jar.toFixed(5)} SOL, balances ${(owedSum() / 1e9).toFixed(5)} SOL`);
+    check("every payout row is >= 0.001 SOL", [...q.payoutsOf.all("2099-06-01T10:00"), ...rowsB].every((r) => r.lamports >= 1e6));
+
+    jar += 0; // an empty quarter: nothing new came in
+    const C = await collector.collect({ day: "2099-06-01T10:30", send: true });
+    check("drop with no new fees: no new credit, jar still covers balances", covered(), C.status);
+    const C2 = await collector.collect({ day: "2099-06-01T10:30", send: true });
+    check("same drop twice -> already paid, balances unchanged", C2.skipped === "already paid");
+    chain.pay = realPay2; chain.jarSol = realJar2;
+  }
+
   // ---------- 6. burst ----------
   console.log("\n== burst: 1,000 trades in one webhook call");
   const burst = Array.from({ length: 1000 }, () => tx("SWAP", Math.random() < 0.5 ? curve : rnd(holders).owner, curve, 1e5, nowS)).map((t) =>
@@ -223,7 +274,7 @@ const rnd = (a) => a[Math.floor(Math.random() * a.length)];
   check("/api/feed limit capped at 100", (await req("GET", "/api/feed?limit=99999")).body.length === 100);
   check("unknown route -> 404", (await req("GET", "/api/nope")).status === 404);
   const st = (await req("GET", "/api/state")).body;
-  check("next collection is the coming 00:00 UTC", st.nextCollection === new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate() + 1)).toISOString(), st.nextCollection);
+  check("next drop is the coming 15-minute boundary", st.nextCollection === new Date(Math.floor(Date.now() / 900e3) * 900e3 + 900e3).toISOString() && st.payoutEveryMin === 15, st.nextCollection);
   check("preflight says NOT ready in mock", (await admin("GET", "/admin/preflight")).body.readyForLive === false);
 
   server.close();

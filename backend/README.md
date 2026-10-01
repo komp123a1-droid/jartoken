@@ -7,7 +7,7 @@ Helius webhook ──► ledger (SQLite) ──► swear bot (Telegram / X)
                         │
    00:00 UTC cron ──► collector: snapshot ≥100,000 $JAR − sinners − excluded ──► batch SOL payouts
                         │
-                     public API ──► swearjar.fun
+                     public API ──► jartoken.xyz
 ```
 
 ## Run

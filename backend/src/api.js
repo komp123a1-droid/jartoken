@@ -19,21 +19,27 @@ function makeApi({ q, chain, ledger, collector }) {
     return snap;
   }
 
+  // Wallets that may not receive drops right now: swore within the last SIN_WINDOW_HOURS.
+  const blockedNow = () => new Set(q.swearersBetween.all(Date.now() - cfg.sinWindowHours * 3600e3, Date.now()).map((r) => r.wallet));
+
   async function state() {
     const day = dayOf(Date.now());
     const s = await snapshot();
-    const sinners = new Set(q.sinnersOf.all(day).map((r) => r.wallet));
+    const blocked = blockedNow();
     let cleanCount = 0, cleanTokens = 0;
     for (const [owner, tokens] of s.byOwner) {
-      if (tokens >= cfg.thresholdTokens && !sinners.has(owner) && !cfg.excluded.includes(owner) && owner !== chain.jarWallet()) { cleanCount++; cleanTokens += tokens; }
+      if (tokens >= cfg.thresholdTokens && !blocked.has(owner) && !cfg.excluded.includes(owner) && owner !== chain.jarWallet()) { cleanCount++; cleanTokens += tokens; }
     }
+    const owedTotalSol = q.owedTotal.get().n / 1e9;
+    const jarSol = await chain.jarSol();
     return {
       mode: chain.mode, demo: chain.mode === "mock", day,
       ca: chain.mode === "mock" ? "[coming soon]" : cfg.mint || "[coming soon]",
       jarWallet: chain.mode === "mock" ? null : chain.jarWallet(),
-      jarSol: await chain.jarSol(),
-      cleanCount, cleanTokens, sinnersToday: sinners.size,
+      jarSol, owedTotalSol, nextDropPotSol: Math.max(0, jarSol - cfg.reserveSol - owedTotalSol),
+      cleanCount, cleanTokens, sinnersToday: q.sinnerCount.get(day).n, blockedNow: blocked.size,
       thresholdTokens: cfg.thresholdTokens, minPayoutSol: cfg.minPayoutSol,
+      payoutEveryMin: cfg.payoutEveryMin, sinWindowHours: cfg.sinWindowHours,
       nextCollection: collector.nextCollection().toISOString(),
     };
   }
@@ -44,15 +50,20 @@ function makeApi({ q, chain, ledger, collector }) {
     const s = await snapshot();
     const tokens = s.byOwner.get(addr) || 0;
     const sin = q.isSinner.get(day, addr);
+    const last = q.lastSwear.get(addr)?.ts || 0;
+    const until = last ? last + cfg.sinWindowHours * 3600e3 : 0;
+    const blocked = until > Date.now();
     const today = Object.fromEntries(q.walletDay.all(addr, day).map((r) => [r.kind, { count: r.n, tokens: r.tokens }]));
     const st = await state();
-    const eligible = !sin && tokens >= cfg.thresholdTokens;
-    const estShareSol = eligible && st.cleanTokens ? Math.max(0, st.jarSol - cfg.reserveSol) * (tokens / st.cleanTokens) : 0;
+    const eligible = !blocked && tokens >= cfg.thresholdTokens;
+    const estShareSol = eligible && st.cleanTokens ? st.nextDropPotSol * (tokens / st.cleanTokens) : 0; // next drop
     return {
       status: 200,
       body: {
-        wallet: addr, day, tokens, swore: !!sin, swearsToday: sin?.swears || 0, firstSwearSig: sin?.first_sig || null,
-        today, eligible, estShareSol, estimate: true,
+        wallet: addr, day, tokens, swore: blocked, swearsToday: sin?.swears || 0, firstSwearSig: sin?.first_sig || null,
+        blockedUntil: blocked ? new Date(until).toISOString() : null,
+        owedSol: (q.owedOf.get(addr)?.lamports || 0) / 1e9,
+        today, eligible, estShareSol, estimate: true, nextDrop: st.nextCollection,
         payouts: q.walletPayouts.all(addr),
       },
     };

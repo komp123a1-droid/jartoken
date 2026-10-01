@@ -17,7 +17,8 @@
     "localnet": "node --no-warnings scripts/localnet-e2e.js",
     "pump-test": "node --no-warnings scripts/pump-e2e.js",
     "test:chain": "npm run localnet && npm run pump-test",
-    "pump-validator": "node --no-warnings scripts/pump-validator.js"
+    "pump-validator": "node --no-warnings scripts/pump-validator.js",
+    "real-check": "node --no-warnings --env-file-if-exists=.env scripts/real-parse-check.js"
   },
   "engines": {
     "node": ">=22.13"

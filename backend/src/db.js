@@ -26,6 +26,8 @@ function open(path) {
       PRIMARY KEY (day, wallet)
     );
     CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT);
+    CREATE TABLE IF NOT EXISTS owed (wallet TEXT PRIMARY KEY, lamports INTEGER NOT NULL DEFAULT 0, ts INTEGER); -- personal unpaid balance
+    CREATE INDEX IF NOT EXISTS events_wallet_ts ON events (wallet, ts);
     CREATE TABLE IF NOT EXISTS outbox (
       id INTEGER PRIMARY KEY AUTOINCREMENT, channel TEXT, text TEXT, status TEXT, ts INTEGER
     );
@@ -56,12 +58,23 @@ function open(path) {
     sinnersFull: db.prepare("SELECT wallet, swears, first_sig, ts FROM sinners WHERE day = ? ORDER BY ts DESC"),
     clearUnsentPayouts: db.prepare("DELETE FROM payouts WHERE day = ? AND status = 'dry-run'"),
     sentPayouts: db.prepare("SELECT wallet FROM payouts WHERE day = ? AND status = 'sent'"),
+    swearersBetween: db.prepare("SELECT DISTINCT wallet FROM events WHERE kind != 'buy' AND ts > ? AND ts <= ?"),
+    lastSwear: db.prepare("SELECT MAX(ts) AS ts FROM events WHERE wallet = ? AND kind != 'buy'"),
+    owedAll: db.prepare("SELECT wallet, lamports FROM owed WHERE lamports > 0"),
+    owedOf: db.prepare("SELECT lamports FROM owed WHERE wallet = ?"),
+    owedTotal: db.prepare("SELECT COALESCE(SUM(lamports), 0) AS n FROM owed"),
+    owedAdd: db.prepare("INSERT INTO owed (wallet, lamports, ts) VALUES (?, ?, ?) ON CONFLICT (wallet) DO UPDATE SET lamports = lamports + excluded.lamports, ts = excluded.ts"),
+    owedSub: db.prepare("UPDATE owed SET lamports = MAX(0, lamports - ?), ts = ? WHERE wallet = ?"),
+    owedForfeit: db.prepare("UPDATE owed SET lamports = 0, ts = ? WHERE wallet = ?"),
+    openCollections: db.prepare("SELECT day FROM collections WHERE status IN ('sending', 'partial') ORDER BY ts"),
     kvGet: db.prepare("SELECT v FROM kv WHERE k = ?"),
     kvSet: db.prepare("INSERT INTO kv (k, v) VALUES (?, ?) ON CONFLICT (k) DO UPDATE SET v = excluded.v"),
     outbox: db.prepare("INSERT INTO outbox (channel, text, status, ts) VALUES (?, ?, ?, ?)"),
     outboxSince: db.prepare("SELECT COUNT(*) AS n FROM outbox WHERE channel = ? AND status = 'sent' AND ts > ?"),
   };
 
+  // run fn inside one SQLite transaction (all-or-nothing)
+  q.tx = (fn) => { db.exec("BEGIN"); try { const r = fn(); db.exec("COMMIT"); return r; } catch (e) { db.exec("ROLLBACK"); throw e; } };
   return { db, q };
 }
 
