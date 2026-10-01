@@ -13,12 +13,16 @@
     "x": "node --no-warnings --env-file-if-exists=.env scripts/x.js",
     "import-key": "node --no-warnings scripts/import-key.js",
     "devnet": "node --no-warnings scripts/devnet-test.js",
-    "test:all": "npm test && npm run simulate && node --no-warnings scripts/devnet-test.js offline"
+    "test:all": "npm test && npm run simulate && node --no-warnings scripts/devnet-test.js offline",
+    "localnet": "node --no-warnings scripts/localnet-e2e.js"
   },
   "engines": {
     "node": ">=22.13"
   },
   "dependencies": {
     "@solana/web3.js": "1.99.0"
+  },
+  "devDependencies": {
+    "@solana/spl-token": "^0.4.9"
   }
 }

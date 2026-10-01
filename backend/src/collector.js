@@ -5,6 +5,7 @@ const { dayOf } = require("./db");
 const { LAMPORTS_PER_SOL } = require("./solana");
 
 const yesterday = () => dayOf(Date.now() - 864e5);
+const TX_FEE = 5000; // lamports per signature (no priority fee)
 
 // Pure math, exported for tests.
 function split({ jarSol, holders, sinners, excluded }) {
@@ -13,10 +14,14 @@ function split({ jarSol, holders, sinners, excluded }) {
   const clean = holders.filter((h) => h.tokens >= cfg.thresholdTokens && !excluded.has(h.owner) && !sinners.has(h.owner));
   const total = clean.reduce((s, h) => s + h.tokens, 0);
   const minLamports = Math.ceil(cfg.minPayoutSol * LAMPORTS_PER_SOL);
-  const shares = total ? clean.map((h) => ({ wallet: h.owner, tokens: h.tokens, lamports: Math.floor(pot * (h.tokens / total)) })) : [];
-  const pay = shares.filter((s) => s.lamports >= minLamports);
+  // Tx fees (5000 lamports per tx, paid by the jar) come out of the pot, so the reserve stays whole.
+  const shareOut = (p) => (total ? clean.map((h) => ({ wallet: h.owner, tokens: h.tokens, lamports: Math.floor(p * (h.tokens / total)) })) : []);
+  let pay = shareOut(pot).filter((s) => s.lamports >= minLamports);
+  const fees = Math.ceil(pay.length / cfg.batchSize) * TX_FEE;
+  if (fees) pay = shareOut(Math.max(0, pot - fees)).filter((s) => s.lamports >= minLamports);
   const paidLamports = pay.reduce((s, p) => s + p.lamports, 0);
-  return { distributable, clean, pay, paidSol: paidLamports / LAMPORTS_PER_SOL, carrySol: distributable - paidLamports / LAMPORTS_PER_SOL };
+  const feeSol = Math.ceil(pay.length / cfg.batchSize) * TX_FEE / LAMPORTS_PER_SOL;
+  return { distributable, clean, pay, feeSol, paidSol: paidLamports / LAMPORTS_PER_SOL, carrySol: distributable - feeSol - paidLamports / LAMPORTS_PER_SOL };
 }
 
 function makeCollector({ q, chain, bot }) {

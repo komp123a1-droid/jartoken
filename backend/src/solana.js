@@ -29,8 +29,28 @@ async function balanceSol(pubkey) {
 }
 
 // All $JAR holders, summed per owner: [{ owner, tokens }]
+// Without Helius (or on a local validator): plain getProgramAccounts over SPL Token and Token-2022.
+// Reads only owner + amount (bytes 32..72 of the account) to keep it light.
+const TOKEN_PROGRAMS = ["TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"];
+async function holdersViaRpc() {
+  const mint = new PublicKey(cfg.mint);
+  const byOwner = new Map();
+  for (const pid of TOKEN_PROGRAMS) {
+    const filters = [{ memcmp: { offset: 0, bytes: mint.toBase58() } }];
+    if (pid.startsWith("Tokenkeg")) filters.push({ dataSize: 165 });
+    const accs = await conn().getProgramAccounts(new PublicKey(pid), { filters, dataSlice: { offset: 32, length: 40 } });
+    for (const { account } of accs) {
+      const d = account.data;
+      const owner = new PublicKey(d.subarray(0, 32)).toBase58();
+      const amount = Number(d.readBigUInt64LE(32)) / 10 ** cfg.decimals;
+      if (amount > 0) byOwner.set(owner, (byOwner.get(owner) || 0) + amount);
+    }
+  }
+  return [...byOwner].map(([owner, tokens]) => ({ owner, tokens }));
+}
+
 async function holders() {
-  if (!cfg.heliusKey) throw new Error("HELIUS_API_KEY is needed for the holder snapshot");
+  if (!cfg.heliusKey) return holdersViaRpc();
   const byOwner = new Map();
   for (let page = 1; ; page++) {
     const res = await fetch(cfg.rpcUrl, {

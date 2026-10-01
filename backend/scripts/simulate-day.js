@@ -108,7 +108,9 @@ const rnd = (a) => a[Math.floor(Math.random() * a.length)];
   const pot = Math.floor((jarBefore - cfg.reserveSol) * 1e9);
   const elig = holders.filter((h) => h.tokens >= cfg.thresholdTokens && !excluded.has(h.owner) && !sinnersY.has(h.owner));
   const tot = elig.reduce((s, h) => s + h.tokens, 0);
-  const expect = new Map(elig.map((h) => [h.owner, Math.floor(pot * (h.tokens / tot))]).filter(([, l]) => l >= 1e6));
+  const n0 = elig.filter((h) => Math.floor(pot * (h.tokens / tot)) >= 1e6).length;
+  const potNet = pot - Math.ceil(n0 / cfg.batchSize) * 5000; // tx fees come out of the pot
+  const expect = new Map(elig.map((h) => [h.owner, Math.floor(potNet * (h.tokens / tot))]).filter(([, l]) => l >= 1e6));
 
   const dry = (await admin("POST", "/admin/collect", { day: YDAY })).body;
   check("dry run via web: status dry-run", dry.status === "dry-run");
@@ -118,7 +120,7 @@ const rnd = (a) => a[Math.floor(Math.random() * a.length)];
   check("no sinner on the list", rows.every((r) => !sinnersY.has(r.wallet)));
   check("nobody under 100,000 $JAR on the list", rows.every((r) => r.tokens >= 100000));
   check("no excluded wallet (curve, jar) on the list", rows.every((r) => !excluded.has(r.wallet)));
-  check("paid + carry == jar - reserve", Math.abs(dry.paidSol + dry.carrySol - (jarBefore - cfg.reserveSol)) < 1e-9, `paid ${dry.paidSol.toFixed(4)} carry ${dry.carrySol.toFixed(4)}`);
+  check("paid + fees + carry == jar - reserve", Math.abs(dry.paidSol + Math.ceil(rows.length / cfg.batchSize) * 5e-6 + dry.carrySol - (jarBefore - cfg.reserveSol)) < 1e-9, `paid ${dry.paidSol.toFixed(4)} carry ${dry.carrySol.toFixed(4)}`);
   check("bigger holder gets more (pro rata)", (() => { const s = rows.slice().sort((a, b) => a.tokens - b.tokens); return s.every((r, i) => !i || r.lamports >= s[i - 1].lamports); })());
   check("jar untouched by dry run", (await chain.jarSol()) === jarBefore);
   check("dry run posts only a preview (nothing to Telegram/X)", q.outboxLast.all(2).every((m) => m.status === "preview"));

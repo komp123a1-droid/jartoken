@@ -35,7 +35,8 @@ Ako imaš `~/.cloudflared/config.yml` za drugi projekat, dodaj `--config prazan.
 ```bash
 cd backend
 npm run test:all     # self-test + simulacija dana (53 provere) + isplate na offline Solana lancu (8 provera)
-npm run devnet all   # prave isplate na DEVNETU (treba ~1 SOL na devnet test wallet, vidi dole)
+npm run localnet     # PRAV Solana lanac lokalno (Docker): token, 60 holdera, pravi trejdovi, prave SOL isplate, ubijen proces usred isplate (27 provera)
+npm run devnet all   # isto na DEVNETU (treba ~1 SOL na devnet test wallet, vidi dole)
 ```
 
 Na `/test/` stranici: "pokreni sve redom" (8 koraka) — treba admin token iz `backend/.admin-token`.
@@ -68,6 +69,13 @@ Pravilo: posle izmene `npm run test:all` mora da prođe pre pusha.
 Koriste se OAuth 1.0a ključevi jer ne ističu (OAuth2 token traje 2 sata). Free nivo ima mali mesečni limit objava, zato `X_MAX_PER_DAY=15` i na X idu samo prodaje ≥ `X_MIN_TOKENS` (prva psovka walleta tog dana). Telegram dobija sve.
 
 **Zaštita:** u `MODE=mock` bot NIKAD ne objavljuje lažne trejdove na prave naloge (sve ide u outbox na test stranici). Samo za test bota: `BOT_IN_MOCK=true`.
+
+## Blockchain test (lokalni validator — bez faucet-a)
+
+```bash
+docker run -d --name jar-validator -p 127.0.0.1:8899:8899 -p 127.0.0.1:8900:8900 solanalabs/solana:v1.18.26 solana-test-validator --reset
+cd backend && npm run localnet
+```
 
 ## Blockchain test (devnet)
 

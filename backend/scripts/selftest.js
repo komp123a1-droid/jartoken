@@ -45,8 +45,8 @@ const { makeApi } = require("../src/api");
     holders: [{ owner: "a", tokens: 300000 }, { owner: "b", tokens: 100000 }, { owner: "small", tokens: 99999 }, { owner: "S", tokens: 5e6 }, { owner: "X", tokens: 5e8 }, { owner: "dust", tokens: 100000 }],
   });
   assert.deepStrictEqual(r.clean.map((h) => h.owner), ["a", "b", "dust"]);
-  assert.ok(Math.abs(r.pay[0].lamports / 1e9 - 0.6) < 1e-6, "a gets 3/5 of 1.00 SOL");
-  assert.ok(Math.abs(r.paidSol + r.carrySol - 1.0) < 1e-9);
+  assert.ok(Math.abs(r.pay[0].lamports / 1e9 - 0.6 * (1 - 5e-6)) < 1e-8, "a gets 3/5 of 1.00 SOL minus one tx fee");
+  assert.ok(Math.abs(r.paidSol + r.feeSol + r.carrySol - 1.0) < 1e-9, "paid + fees + carry == jar - reserve");
   console.log("ok  split: threshold, sinners, excluded, pro rata, reserve, carry");
 
   // 4. dust stays in the jar
