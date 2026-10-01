@@ -1,0 +1,1270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Swear Jar, 2026 — $JAR</title>
+<meta name="description" content="Sister Agnes, The Swear Jar, 2026. Glass, masking tape, SOL, restraint. Creator fees fill the jar; at 00:00 UTC it is shared among holders who did not sell.">
+<meta name="theme-color" content="#eeeae3">
+<link rel="icon" href="../../logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Italiana&family=Tenor+Sans&family=Fragment+Mono&family=Just+Another+Hand&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#eeeae3; --cream-2:#e6e1d8; --paper:#f7f4ee; --ink:#1c1a17; --ink-2:#4d4840; --ink-3:#6c655a;
+  --hair:rgba(28,26,23,.18); --ox:#7a2323; --ox-2:#5d1616; --brass:#8d6a33;
+  --display:"Italiana", "Didot", "Bodoni 72", "Times New Roman", serif;
+  --text:"Tenor Sans", "Gill Sans", "Optima", "Segoe UI", sans-serif;
+  --mono:"Fragment Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --hand:"Just Another Hand", "Segoe Print", cursive;
+  --ease:cubic-bezier(.2,.75,.15,1);
+  --rail:min(400px, 34vw);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--cream);color:var(--ink)}
+body{font:400 15px/1.6 var(--text);-webkit-font-smoothing:antialiased;letter-spacing:.005em;background:var(--cream)}
+button,input{font:inherit;color:inherit}
+::selection{background:var(--ink);color:var(--paper)}
+.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- the room ---------- */
+#stage{position:fixed;inset:0;z-index:0;touch-action:none;cursor:grab;
+  background:radial-gradient(120% 90% at 55% 30%, #f6f3ee 0%, var(--cream) 55%, #e2ddd3 100%)}
+#stage.dragging{cursor:grabbing}
+#stage canvas{display:block;width:100%!important;height:100%!important;outline:none}
+.fallback{position:absolute;inset:0;display:none;place-items:center}
+.no-gl .fallback{display:grid}
+.fallback svg{width:min(56vmin,420px);height:auto;margin-left:calc(var(--rail) * .6)}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.35;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45  0 0 0 0 .42  0 0 0 0 .38  0 0 0 .09 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.wash{position:fixed;left:0;top:0;bottom:0;width:calc(var(--rail) + 160px);z-index:2;pointer-events:none;background:linear-gradient(90deg, rgba(238,234,227,.9) 0, rgba(238,234,227,.72) 55%, rgba(238,234,227,0) 100%)}
+.vignette{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(140% 110% at 60% 40%, transparent 55%, rgba(120,108,90,.16) 100%)}
+
+/* ---------- masthead: museum wayfinding ---------- */
+.mast{position:fixed;z-index:5;top:calc(22px + env(safe-area-inset-top,0px));left:clamp(18px,3vw,44px);right:clamp(18px,3vw,44px);
+  display:flex;justify-content:space-between;align-items:flex-start;gap:18px;pointer-events:none}
+.mast > *{pointer-events:auto}
+.way{display:flex;gap:14px;align-items:baseline}
+.way b{font:400 11px/1 var(--text);letter-spacing:.32em;text-transform:uppercase}
+.way span{font:400 11px/1 var(--text);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
+.room{display:inline-grid;place-items:center;width:30px;height:30px;border:1px solid var(--ink);font:400 14px/1 var(--display);letter-spacing:0}
+.meta{display:flex;gap:26px;align-items:flex-start;text-align:right}
+.meta dl{margin:0}
+.meta dt{font:400 10px/1 var(--text);letter-spacing:.24em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px}
+.meta dd{margin:0;font:400 13px/1 var(--mono);letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;font:400 9px/1 var(--text);letter-spacing:.18em;text-transform:uppercase;color:var(--ox);border:1px solid currentColor;padding:3px 4px 2px;margin-left:6px;vertical-align:2px}
+.snd{appearance:none;background:none;border:1px solid var(--hair);padding:7px 10px 6px;font:400 10px/1 var(--text);letter-spacing:.22em;text-transform:uppercase;cursor:pointer;color:var(--ink-2)}
+.snd[aria-pressed="true"]{color:var(--ink);border-color:var(--ink)}
+
+/* ---------- wall label (museum caption) ---------- */
+.label{position:fixed;z-index:4;left:clamp(18px,3vw,44px);bottom:calc(104px + env(safe-area-inset-bottom,0px));width:var(--rail);
+  max-height:calc(100svh - 200px);overflow:auto;scrollbar-width:thin;padding-right:6px}
+.stop{animation:rise .7s var(--ease) both}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.stopno{display:flex;align-items:center;gap:12px;font:400 10px/1 var(--text);letter-spacing:.3em;text-transform:uppercase;color:var(--ink-3);margin:0 0 18px}
+.stopno::after{content:"";height:1px;flex:1;background:var(--hair)}
+.artist{margin:0;font:400 13px/1.35 var(--text);letter-spacing:.06em}
+.artist span{color:var(--ink-3)}
+.work{margin:6px 0 4px;font:400 clamp(30px,2.9vw,42px)/1.02 var(--display);letter-spacing:.005em}
+.work i{font-style:normal;color:var(--ink-3)}
+.medium,.credit{margin:0;font-size:12.5px;line-height:1.5;color:var(--ink-2)}
+.credit{color:var(--ink-3)}
+.rule{height:1px;background:var(--hair);margin:18px 0 16px;border:0}
+.body{margin:0 0 12px;font-size:14.5px;line-height:1.62;color:var(--ink);max-width:36em}
+.sig{margin:6px 0 0;font:400 30px/1 var(--hand);color:var(--ink-2);transform:rotate(-2deg);transform-origin:left}
+.acc{margin:16px 0 0;font:400 11px/1.6 var(--mono);color:var(--ink-3);letter-spacing:.01em}
+.acc strong{color:var(--ink);font-weight:400}
+.stats{display:grid;grid-template-columns:repeat(3,auto);gap:4px 22px;justify-content:start;margin:14px 0 0}
+.stats div{display:flex;flex-direction:column-reverse}
+.stats dt{font:400 9.5px/1.3 var(--text);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
+.stats dd{margin:0 0 4px;font:400 26px/1 var(--display);font-variant-numeric:tabular-nums}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 0}
+.btn{appearance:none;cursor:pointer;background:var(--ink);color:var(--paper);border:1px solid var(--ink);padding:11px 16px 10px;
+  font:400 11px/1 var(--text);letter-spacing:.22em;text-transform:uppercase;transition:background .2s,color .2s,transform .15s}
+.btn:hover{background:#000}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.ghost:hover{background:var(--ink);color:var(--paper)}
+.btn.ox{background:var(--ox);border-color:var(--ox)}
+.btn.ox:hover{background:var(--ox-2)}
+:focus-visible{outline:2px solid var(--ox);outline-offset:3px}
+
+/* sinners' ledger */
+.ledger{list-style:none;margin:12px 0 0;padding:0;font:400 12px/1.5 var(--mono)}
+.ledger li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;padding:7px 0;border-top:1px solid var(--hair);align-items:baseline}
+.ledger li:first-child{animation:rise .5s var(--ease) both}
+.ledger .t{color:var(--ink-3)}
+.ledger .w{color:var(--ox)}
+.ledger .a{color:var(--ink-2)}
+
+/* countdown */
+.clock{font:400 clamp(54px,6vw,86px)/.9 var(--display);letter-spacing:-.01em;font-variant-numeric:tabular-nums;margin:6px 0 2px}
+.clock small{font:400 11px/1 var(--text);letter-spacing:.24em;text-transform:uppercase;color:var(--ink-3);display:block;margin-top:10px}
+
+/* flywheel list */
+.wheel{list-style:none;counter-reset:w;margin:6px 0 0;padding:0}
+.wheel li{counter-increment:w;display:grid;grid-template-columns:28px 1fr;gap:8px;padding:6px 0;color:var(--ink-3);transition:color .4s}
+.wheel li::before{content:counter(w,upper-roman);font:400 16px/1.3 var(--display);color:var(--ink-3)}
+.wheel li.on{color:var(--ink)}
+.wheel li.on::before{color:var(--ox)}
+.wheel li b{font-weight:400;display:block;letter-spacing:.14em;text-transform:uppercase;font-size:11px;margin-bottom:1px}
+.wheel li span{font-size:13px;line-height:1.45}
+
+/* forms */
+.field{display:grid;gap:6px;margin:0 0 12px}
+.field label{font:400 10px/1.2 var(--text);letter-spacing:.22em;text-transform:uppercase;color:var(--ink-2)}
+.field input[type=text],.field input[type=number]{width:100%;background:transparent;border:0;border-bottom:1px solid var(--ink);padding:6px 0 7px;
+  font:400 17px/1.2 var(--mono);border-radius:0;outline:none}
+.field input:focus-visible{outline:none;border-bottom:2px solid var(--ox);padding-bottom:6px}
+.field .hint{font-size:11.5px;color:var(--ink-3);line-height:1.4}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.check{display:flex;gap:10px;align-items:center;font-size:13px;margin:4px 0 12px;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--ox)}
+.formula{font:400 12px/1.6 var(--mono);color:var(--ink-2);border-left:1px solid var(--ink);padding:2px 0 2px 12px;margin:8px 0 14px}
+.result{font:400 clamp(40px,4vw,58px)/1 var(--display);margin:4px 0 4px;font-variant-numeric:tabular-nums}
+.result-note{font-size:13px;color:var(--ink-2);min-height:2.6em;margin:0}
+
+/* ---------- audio guide (navigation) ---------- */
+.guide{position:fixed;z-index:6;left:clamp(18px,3vw,44px);bottom:calc(26px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:16px}
+.guide .gl{font:400 9.5px/1.3 var(--text);letter-spacing:.26em;text-transform:uppercase;color:var(--ink-3);width:72px}
+.keys{display:flex;gap:6px}
+.key{appearance:none;cursor:pointer;width:46px;height:46px;border:1px solid var(--hair);background:rgba(247,244,238,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  font:400 19px/1 var(--display);display:grid;place-items:center;transition:border-color .25s,background .25s,color .25s;position:relative}
+.key:hover{border-color:var(--ink)}
+.key[aria-current="step"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.key .kn{position:absolute;bottom:4px;left:0;right:0;font:400 7px/1 var(--text);letter-spacing:.14em;text-transform:uppercase;opacity:.55}
+.arrow{appearance:none;cursor:pointer;background:none;border:0;width:40px;height:46px;display:grid;place-items:center}
+.arrow svg{width:22px;height:22px;stroke:var(--ink);fill:none;stroke-width:1.2}
+.arrow:hover svg{stroke:var(--ox)}
+.hint-drag{position:fixed;z-index:3;right:clamp(18px,3vw,44px);bottom:calc(36px + env(safe-area-inset-bottom,0px));font:400 10px/1.4 var(--text);letter-spacing:.24em;text-transform:uppercase;color:var(--ink-3);text-align:right;pointer-events:none}
+
+/* ---------- announcements (the docent reads the swears) ---------- */
+.announce{position:fixed;z-index:7;right:clamp(18px,3vw,44px);top:calc(86px + env(safe-area-inset-top,0px));width:min(330px,calc(100vw - 36px));pointer-events:none}
+.say{background:var(--paper);border-left:2px solid var(--ox);padding:12px 14px 12px;margin-bottom:8px;box-shadow:0 18px 40px -22px rgba(60,48,30,.45);
+  font:400 13.5px/1.5 var(--text);animation:say 5.2s var(--ease) both}
+.say .w{font-family:var(--mono);font-size:12.5px;color:var(--ox)}
+.say small{display:block;margin-top:4px;font:400 22px/1 var(--hand);color:var(--ink-3)}
+@keyframes say{0%{opacity:0;transform:translateX(18px)}8%{opacity:1;transform:none}86%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
+
+/* certificate preview (2D fallback + mobile) */
+.cert-prev{display:none;width:100%;border:1px solid var(--hair);margin:6px 0 12px;background:var(--paper)}
+.no-gl .cert-prev{display:block}
+
+/* ---------- loader ---------- */
+.veil{position:fixed;inset:0;z-index:20;background:var(--cream);display:grid;place-items:center;transition:opacity 1.1s var(--ease),visibility 1.1s}
+.veil.gone{opacity:0;visibility:hidden}
+.veil p{font:400 11px/1 var(--text);letter-spacing:.34em;text-transform:uppercase;color:var(--ink-3);margin:0}
+.veil i{display:block;width:120px;height:1px;background:var(--hair);margin:16px auto 0;position:relative;overflow:hidden}
+.veil i::after{content:"";position:absolute;inset:0;background:var(--ink);transform-origin:left;animation:load 1.6s var(--ease) infinite}
+@keyframes load{0%{transform:scaleX(0)}60%{transform:scaleX(1)}100%{transform:scaleX(1);opacity:0}}
+
+/* ---------- phone ---------- */
+@media (max-width: 760px){
+  :root{--rail:auto}
+  .mast{top:calc(14px + env(safe-area-inset-top,0px));left:16px;right:16px}
+  .way span{display:none}
+  .way b{font-size:9.5px;letter-spacing:.22em;white-space:nowrap}
+  .way br{display:none}
+  .room{width:26px;height:26px;font-size:12px}
+  .way{align-items:center;gap:10px}
+  .meta dt{font-size:8.5px;letter-spacing:.16em;margin-bottom:5px}
+  .meta dd{font-size:12px}
+  .wash{display:none}
+  .meta{gap:14px}
+  .meta .m-jar{display:none}
+  .snd{padding:6px 8px 5px}
+  .label{left:0;right:0;width:auto;bottom:calc(70px + env(safe-area-inset-bottom,0px));max-height:44svh;padding:18px 18px 10px;
+    background:linear-gradient(180deg, rgba(238,234,227,0) 0, rgba(238,234,227,.93) 22px, rgba(238,234,227,.97) 100%);
+    backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  .stopno{margin-bottom:12px}
+  .work{font-size:34px}
+  .body{font-size:14px}
+  .stats dd{font-size:22px}
+  .guide{left:0;right:0;bottom:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));background:var(--paper);border-top:1px solid var(--hair);justify-content:space-between;gap:4px}
+  .guide .gl{display:none}
+  .keys{gap:4px;flex:1;justify-content:center}
+  .key{width:auto;flex:1;max-width:48px;height:46px}
+  .arrow{width:34px}
+  .hint-drag{display:none}
+  .announce{top:auto;bottom:calc(46svh + 80px);left:16px;right:16px;width:auto}
+  .say{padding:10px 12px}
+  .clock{font-size:60px}
+  .result{font-size:44px}
+  .cert-prev{display:block}
+}
+@media (max-width: 760px) and (max-height: 700px){ .label{max-height:40svh} }
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div class="veil" id="veil" aria-hidden="true"><div><p>Room VII &middot; hanging the work</p><i></i></div></div>
+
+<div id="stage" role="img" aria-label="A glass swear jar on a white plinth in an empty cream gallery. SOL coins fall into it on every trade. Masking-tape labels on the glass name the wallets that sold today.">
+  <div class="fallback" aria-hidden="true">
+    <svg viewBox="0 0 300 400" fill="none" stroke="#1c1a17" stroke-width="1.4">
+      <rect x="60" y="300" width="180" height="100" fill="#f7f4ee" stroke="none"/>
+      <path d="M60 300h180" />
+      <path d="M100 110 q-6 0 -6 8 v12 q-24 12 -24 40 v118 q0 12 12 12 h136 q12 0 12 -12 v-118 q0 -28 -24 -40 v-12 q0 -8 -6 -8 z" fill="rgba(255,255,255,.5)"/>
+      <path d="M96 128h108" opacity=".5"/>
+      <g fill="#b9b2a4" stroke="none"><ellipse cx="150" cy="286" rx="62" ry="6"/><ellipse cx="130" cy="279" rx="16" ry="4"/><ellipse cx="170" cy="280" rx="16" ry="4"/><ellipse cx="152" cy="273" rx="16" ry="4"/></g>
+      <rect x="92" y="186" width="116" height="34" fill="#e9dcb8" stroke="none" transform="rotate(-3 150 203)"/>
+      <text x="150" y="210" text-anchor="middle" font-family="Just Another Hand, cursive" font-size="26" fill="#1c1a17" stroke="none" transform="rotate(-3 150 203)">SWEAR JAR</text>
+    </svg>
+  </div>
+</div>
+<div class="grain" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<div class="wash" aria-hidden="true"></div>
+
+<header class="mast">
+  <div class="way">
+    <span class="room" aria-hidden="true">VII</span>
+    <div>
+      <b>The Clean Mouth Collection</b><br>
+      <span style="display:inline-block;margin-top:7px">Room VII &middot; one work &middot; do not sell</span>
+    </div>
+  </div>
+  <div class="meta">
+    <dl><dt>Collection in</dt><dd id="mCount">--:--:--</dd></dl>
+    <dl class="m-jar"><dt>In the jar <span class="tag">demo</span></dt><dd id="mJar">0.00 SOL</dd></dl>
+    <button class="snd" id="snd" type="button" aria-pressed="false">Sound off</button>
+  </div>
+</header>
+
+<main class="label" id="label" aria-live="polite">
+  <!-- 01 -->
+  <article class="stop" data-stop="0">
+    <p class="stopno">Stop 01 &middot; The work</p>
+    <p class="artist">Sister Agnes <span>(dates withheld)</span></p>
+    <h1 class="work">The Swear Jar, <i>2026</i></h1>
+    <p class="medium">Glass, masking tape, SOL, restraint.</p>
+    <p class="credit">On permanent loan from the parish kitchen.</p>
+    <hr class="rule">
+    <p class="body">Every trade of $JAR pays a creator fee, and all of it drops into this jar. At midnight UTC the jar is shared among everyone who did not sell that day. Selling is a swear. Swears are read aloud.</p>
+    <p class="body">You may look. You may buy. Please do not sell.</p>
+    <p class="sig">&mdash; Sr. Agnes</p>
+    <dl class="stats">
+      <div><dt>In the jar &middot; demo</dt><dd id="sJar">0.00</dd></div>
+      <div><dt>Clean mouths &middot; demo</dt><dd id="sClean">0</dd></div>
+      <div><dt>Swears today &middot; demo</dt><dd id="sSwears">0</dd></div>
+    </dl>
+    <div class="acts">
+      <button class="btn" type="button" data-act="buy">Simulate a buy</button>
+      <button class="btn ghost" type="button" data-act="sell">Simulate a sell</button>
+    </div>
+    <p class="acc">Acc. no. <strong>$JAR</strong> &middot; Solana &middot; pump.fun<br>CA <strong>[coming soon]</strong></p>
+  </article>
+
+  <!-- 02 -->
+  <article class="stop" data-stop="1" hidden>
+    <p class="stopno">Stop 02 &middot; Language</p>
+    <p class="artist">Sister Agnes and the swear bot</p>
+    <h2 class="work">Labels, in order <i>of offence</i></h2>
+    <p class="medium">Masking tape, marker, a public wallet. Ongoing.</p>
+    <hr class="rule">
+    <p class="body">Each strip of tape is a wallet that sold today. The bot reads it aloud the moment it happens, and that wallet forfeits its share until the next collection.</p>
+    <p class="body">Buying more is fine. Moving tokens to another wallet counts as a sell. I do not make exceptions for &ldquo;my other wallet,&rdquo; dear.</p>
+    <p class="sig">&mdash; Sr. Agnes</p>
+    <div class="acts"><button class="btn ox" type="button" data-act="sell">Commit a swear (demo)</button></div>
+    <ol class="ledger" id="ledger" aria-label="Recent swears, demo"></ol>
+  </article>
+
+  <!-- 03 -->
+  <article class="stop" data-stop="2" hidden>
+    <p class="stopno">Stop 03 &middot; The collection</p>
+    <p class="artist">Performed nightly</p>
+    <h2 class="work">Midnight, <i>UTC</i></h2>
+    <p class="medium">Duration: one batch of transfers, about twenty to a transaction.</p>
+    <div class="clock" id="clock" aria-live="off">--:--:--<small>until the jar is emptied</small></div>
+    <hr class="rule">
+    <p class="body">At 00:00 UTC the jar is emptied. Every wallet holding at least 100,000 $JAR that did not sell today receives a share, pro rata. Anything under 0.001 SOL waits for tomorrow.</p>
+    <p class="body">The pool, the bonding curve, the burn address and my own wallet are not invited. The jar does not round up. Neither do I.</p>
+    <p class="sig">&mdash; Sr. Agnes</p>
+  </article>
+
+  <!-- 04 -->
+  <article class="stop" data-stop="3" hidden>
+    <p class="stopno">Stop 04 &middot; The mechanism</p>
+    <p class="artist">Engraved in the floor</p>
+    <h2 class="work">Flywheel, <i>one loop</i></h2>
+    <p class="medium">No moving parts except you.</p>
+    <hr class="rule">
+    <ol class="wheel" id="wheel">
+      <li><div><b>A trade</b><span>Someone buys or sells $JAR on pump.fun.</span></div></li>
+      <li><div><b>The fee</b><span>pump.fun pays the creator fee. We keep none of it.</span></div></li>
+      <li><div><b>The jar</b><span>100% of creator fees go into the public jar wallet.</span></div></li>
+      <li><div><b>Midnight</b><span>The jar is shared among holders who did not sell.</span></div></li>
+      <li><div><b>The swear</b><span>Selling costs you tonight's share, and your name on tape.</span></div></li>
+      <li><div><b>The hold</b><span>So people hold. Holding invites buying. Buying fills the jar.</span></div></li>
+    </ol>
+    <p class="body" style="margin-top:12px">About 40,000 coins launch on pump.fun every day. One of them has a nun.</p>
+    <p class="sig">&mdash; Sr. Agnes</p>
+  </article>
+
+  <!-- 05 -->
+  <article class="stop" data-stop="4" hidden>
+    <p class="stopno">Stop 05 &middot; Your share</p>
+    <p class="artist">Visitor study</p>
+    <h2 class="work">Hold your tongue, <i>an estimate</i></h2>
+    <p class="medium">Pencil on your own conscience. Numbers are demo; the formula is real.</p>
+    <hr class="rule">
+    <form id="calc" novalidate>
+      <div class="field">
+        <label for="cHold">Your $JAR</label>
+        <input id="cHold" type="number" inputmode="numeric" min="0" step="1000" value="2500000">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="cJar">Jar at midnight, SOL</label>
+          <input id="cJar" type="number" inputmode="decimal" min="0" step="0.1" value="184.62">
+          <span class="hint">demo value</span>
+        </div>
+        <div class="field">
+          <label for="cClean">Clean supply, %</label>
+          <input id="cClean" type="number" inputmode="decimal" min="0.1" max="100" step="1" value="38">
+          <span class="hint">of 1B, held by non-sellers (demo)</span>
+        </div>
+      </div>
+      <label class="check"><input id="cSold" type="checkbox"> I sold today</label>
+    </form>
+    <p class="formula">share = jar &times; your $JAR &divide; (clean % &times; 1,000,000,000)<br>eligible if &ge; 100,000 $JAR and no sell since 00:00 UTC</p>
+    <p class="result" id="cOut" aria-live="polite">0.0000 SOL</p>
+    <p class="result-note" id="cNote">Estimate only. Tonight's jar decides.</p>
+  </article>
+
+  <!-- 06 -->
+  <article class="stop" data-stop="5" hidden>
+    <p class="stopno">Stop 06 &middot; The certificate</p>
+    <p class="artist">Issued to the visitor</p>
+    <h2 class="work">Certificate of <i>Clean Mouth</i></h2>
+    <p class="medium">Ink on nothing. Hung in the room while you watch.</p>
+    <hr class="rule">
+    <form id="certf" novalidate>
+      <div class="field">
+        <label for="kName">Name, as you would like it read aloud</label>
+        <input id="kName" type="text" maxlength="28" value="A Patient Holder" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="kWal">Wallet</label>
+        <input id="kWal" type="text" maxlength="48" placeholder="paste a Solana address" autocomplete="off" spellcheck="false">
+        <span class="hint">Nothing is checked or sent. The chain is the proof; this is only paper.</span>
+      </div>
+    </form>
+    <canvas class="cert-prev" id="certPrev" width="800" height="566" aria-label="Certificate preview"></canvas>
+    <div class="acts">
+      <button class="btn" type="button" id="certDl">Download PNG</button>
+      <button class="btn ghost" type="button" id="certLook">Look at it</button>
+    </div>
+    <p class="sig">&mdash; Sr. Agnes</p>
+  </article>
+</main>
+
+<nav class="guide" aria-label="Audio guide stops">
+  <span class="gl">Audio guide</span>
+  <button class="arrow" type="button" id="prev" aria-label="Previous stop"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button>
+  <div class="keys" id="keys">
+    <button class="key" type="button" data-go="0" aria-label="Stop 1, the work" aria-current="step">1<span class="kn">work</span></button>
+    <button class="key" type="button" data-go="1" aria-label="Stop 2, language">2<span class="kn">swears</span></button>
+    <button class="key" type="button" data-go="2" aria-label="Stop 3, the collection">3<span class="kn">midnight</span></button>
+    <button class="key" type="button" data-go="3" aria-label="Stop 4, the mechanism">4<span class="kn">loop</span></button>
+    <button class="key" type="button" data-go="4" aria-label="Stop 5, your share">5<span class="kn">share</span></button>
+    <button class="key" type="button" data-go="5" aria-label="Stop 6, the certificate">6<span class="kn">paper</span></button>
+  </div>
+  <button class="arrow" type="button" id="next" aria-label="Next stop"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>
+</nav>
+<p class="hint-drag" aria-hidden="true">Drag to walk around the plinth<br>Keys 1&ndash;6 &middot; arrows</p>
+<div class="announce" id="announce" role="status" aria-live="polite"></div>
+
+<script>
+/* =========================================================
+   Shared state + DOM (works with or without WebGL)
+   ========================================================= */
+(function(){
+const S = window.JAR = {
+  stop: 0, jar: 184.62, clean: 1204, swears: 37, sound: false,
+  reduced: matchMedia('(prefers-reduced-motion: reduce)').matches,
+  listeners: {}, on(ev, fn){ (this.listeners[ev] ||= []).push(fn); }, emit(ev, d){ (this.listeners[ev]||[]).forEach(f=>f(d)); }
+};
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+S.wallet = () => { let s=''; for(let i=0;i<44;i++) s += B58[Math.random()*58|0]; return s; };
+S.short = w => w.slice(0,4)+'…'+w.slice(-4);
+const fmt = (n, d=2) => n.toLocaleString('en-US',{minimumFractionDigits:d, maximumFractionDigits:d});
+
+/* ---- stops ---- */
+const stops = $$('.stop'), keys = $$('.key');
+S.go = (i, fromScene) => {
+  i = (i + stops.length) % stops.length;
+  if (i === S.stop && !fromScene) { S.emit('stop', i); return; }
+  S.stop = i;
+  stops.forEach((s,k) => s.hidden = k !== i);
+  keys.forEach((b,k) => { if (k===i) b.setAttribute('aria-current','step'); else b.removeAttribute('aria-current'); });
+  $('#label').scrollTop = 0;
+  try { history.replaceState(null, '', '#stop-' + (i+1)); } catch(e){}
+  S.emit('stop', i);
+};
+keys.forEach(b => b.addEventListener('click', () => S.go(+b.dataset.go)));
+$('#prev').onclick = () => S.go(S.stop-1);
+$('#next').onclick = () => S.go(S.stop+1);
+addEventListener('keydown', e => {
+  if (e.target.closest('input,textarea')) return;
+  if (e.key >= '1' && e.key <= '6') S.go(+e.key-1);
+  else if (e.key === 'ArrowRight' || e.key === 'PageDown') { S.go(S.stop+1); e.preventDefault(); }
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { S.go(S.stop-1); e.preventDefault(); }
+});
+let wheelLock = 0;
+addEventListener('wheel', e => {
+  const lab = $('#label');
+  if (lab.contains(e.target) && lab.scrollHeight > lab.clientHeight + 4) {
+    const atEnd = e.deltaY > 0 ? lab.scrollTop + lab.clientHeight >= lab.scrollHeight - 2 : lab.scrollTop <= 0;
+    if (!atEnd) return;
+  }
+  const now = performance.now();
+  if (Math.abs(e.deltaY) < 24 || now < wheelLock) return;
+  wheelLock = now + 1300;
+  S.go(S.stop + (e.deltaY > 0 ? 1 : -1));
+}, {passive:true});
+
+/* ---- numbers ---- */
+function paint(){
+  $('#mJar').textContent = fmt(S.jar) + ' SOL';
+  $('#sJar').textContent = fmt(S.jar);
+  $('#sClean').textContent = S.clean.toLocaleString('en-US');
+  $('#sSwears').textContent = S.swears;
+}
+S.paint = paint;
+
+/* ---- countdown to 00:00 UTC ---- */
+function untilMidnight(){
+  const n = new Date(); const next = Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate()+1);
+  const s = Math.max(0, Math.floor((next - n.getTime())/1000));
+  const p = x => String(x).padStart(2,'0');
+  return p(Math.floor(s/3600)) + ':' + p(Math.floor(s%3600/60)) + ':' + p(s%60);
+}
+S.untilMidnight = untilMidnight;
+function tick(){
+  const t = untilMidnight();
+  $('#mCount').textContent = t;
+  $('#clock').firstChild.nodeValue = t;
+  S.emit('clock', t);
+}
+tick(); setInterval(tick, 1000);
+
+/* ---- sound: a glass clink, synthesized ---- */
+let ac = null;
+$('#snd').onclick = () => {
+  S.sound = !S.sound;
+  $('#snd').setAttribute('aria-pressed', S.sound);
+  $('#snd').textContent = S.sound ? 'Sound on' : 'Sound off';
+  if (S.sound && !ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
+  if (S.sound) S.clink(.6);
+};
+S.clink = (v=.5) => {
+  if (!S.sound || !ac) return;
+  const t = ac.currentTime, g = ac.createGain(); g.connect(ac.destination);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.12*v, t+.004); g.gain.exponentialRampToValueAtTime(.0001, t+.9);
+  const base = 2200 + Math.random()*900;
+  [1, 1.47, 2.09, 2.76].forEach((m,i) => {
+    const o = ac.createOscillator(), og = ac.createGain();
+    o.frequency.value = base*m; o.type = 'sine';
+    og.gain.value = [1,.5,.28,.14][i];
+    o.connect(og); og.connect(g); o.start(t); o.stop(t+1);
+  });
+};
+
+/* ---- trades (demo) ---- */
+const ledger = $('#ledger'), announce = $('#announce');
+const lines = [
+  w => `Language, <span class="w">${w}</span>. That's a sell. Into the jar.`,
+  w => `<span class="w">${w}</span> has sold. I am not angry. I am writing it down.`,
+  w => `Language, <span class="w">${w}</span>. We do not use that word in this room.`,
+  w => `<span class="w">${w}</span>, that was a sell. Your share stays in the jar tonight.`,
+  w => `Language, <span class="w">${w}</span>. Sit at the back until midnight.`
+];
+S.trade = (kind) => {
+  const sell = kind === 'sell' || (kind == null && Math.random() < .3);
+  const fee = +(0.004 + Math.random()*0.03).toFixed(4);
+  S.jar += fee;
+  const w = S.wallet();
+  const amt = Math.round((0.2 + Math.random()*4.2)*10)/10 + 'M';
+  if (sell) {
+    S.swears++; S.clean = Math.max(0, S.clean-1);
+    const now = new Date(); const hh = String(now.getUTCHours()).padStart(2,'0')+':'+String(now.getUTCMinutes()).padStart(2,'0');
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="t">${hh}</span><span class="w">${S.short(w)}</span><span class="a">sold ${amt}</span>`;
+    ledger.prepend(li); while (ledger.children.length > 7) ledger.lastChild.remove();
+    if (kind === 'sell' || S.stop !== 4 && S.stop !== 5) {
+      const d = document.createElement('div'); d.className = 'say';
+      d.innerHTML = lines[Math.random()*lines.length|0](S.short(w)) + '<small>&mdash; Sr. Agnes &middot; demo</small>';
+      announce.prepend(d); setTimeout(() => d.remove(), 5400);
+      while (announce.children.length > 2) announce.lastChild.remove();
+    }
+  } else if (Math.random() < .25) { S.clean++; }
+  paint();
+  S.emit('trade', {sell, wallet:w, amt, fee});
+};
+$$('[data-act]').forEach(b => b.addEventListener('click', () => S.trade(b.dataset.act)));
+// seed ledger with demo sinners
+S.seedSinners = [];
+for (let i=0;i<6;i++){
+  const w = S.wallet(), amt = Math.round((0.2 + Math.random()*4)*10)/10 + 'M';
+  const h = String(Math.max(0, new Date().getUTCHours() - i)).padStart(2,'0') + ':' + String(Math.random()*60|0).padStart(2,'0');
+  S.seedSinners.push({wallet:w, amt, time:h});
+  const li = document.createElement('li');
+  li.innerHTML = `<span class="t">${h}</span><span class="w">${S.short(w)}</span><span class="a">sold ${amt}</span>`;
+  ledger.append(li);
+}
+paint();
+let auto = setInterval(() => { if (!document.hidden) S.trade(); }, S.reduced ? 9000 : 5200);
+
+/* ---- calculator ---- */
+const cH = $('#cHold'), cJ = $('#cJar'), cC = $('#cClean'), cS = $('#cSold'), cO = $('#cOut'), cN = $('#cNote');
+function calc(){
+  const hold = Math.max(0, +cH.value || 0), jar = Math.max(0, +cJ.value || 0), clean = Math.min(100, Math.max(.1, +cC.value || .1));
+  let share = jar * hold / (clean/100 * 1e9), note;
+  if (cS.checked) { share = 0; note = 'Language. You sold today, so your share stays in the jar until the next collection.'; }
+  else if (hold < 100000) { share = 0; note = 'Below 100,000 $JAR. Sit in the back until you are a little taller.'; }
+  else if (hold > clean/100*1e9) { note = 'You cannot hold more than the clean supply, child. Check your numbers.'; }
+  else if (share < 0.001) { note = 'Under 0.001 SOL. It waits in the jar for tomorrow.'; }
+  else note = `About ${(hold/(clean/100*1e9)*100).toFixed(3)}% of tonight's jar. Estimate, not a promise.`;
+  cO.textContent = share.toFixed(4) + ' SOL';
+  cN.textContent = note;
+  S.emit('calc', {share, sold:cS.checked});
+}
+[cH,cJ,cC,cS].forEach(el => el.addEventListener('input', calc));
+$('#calc').addEventListener('submit', e => e.preventDefault());
+calc();
+
+/* ---- certificate ---- */
+function roundedSeal(ctx, x, y, r){
+  ctx.save(); ctx.translate(x,y);
+  ctx.fillStyle = '#7a2323';
+  ctx.beginPath();
+  for (let i=0;i<=72;i++){ const a = i/72*Math.PI*2, rr = r*(1 + (i%2 ? .035 : -.01) + Math.sin(i*1.7)*.012); ctx.lineTo(Math.cos(a)*rr, Math.sin(a)*rr); }
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,235,220,.55)'; ctx.lineWidth = r*.02;
+  ctx.beginPath(); ctx.arc(0,0,r*.82,0,Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,r*.56,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,238,224,.92)';
+  ctx.font = `${r*.13}px "Tenor Sans", sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+  const txt = 'CLEAN MOUTH · THE SWEAR JAR · 00:00 UTC · ';
+  const chars = [...txt]; const step = Math.PI*2/chars.length;
+  chars.forEach((c,i)=>{ ctx.save(); ctx.rotate(i*step - Math.PI/2); ctx.translate(0,-r*.69); ctx.fillText(c,0,0); ctx.restore(); });
+  ctx.font = `${r*.34}px Italiana, serif`; ctx.fillText('$JAR', 0, r*.02);
+  ctx.restore();
+}
+S.drawCert = function(cv, name, wal){
+  const c = cv.getContext('2d'), W = cv.width, H = cv.height, u = W/1000;
+  c.fillStyle = '#f8f5ee'; c.fillRect(0,0,W,H);
+  // paper fibre
+  for (let i=0;i<1400;i++){ c.fillStyle = `rgba(90,78,60,${Math.random()*.035})`; c.fillRect(Math.random()*W, Math.random()*H, 1+Math.random()*2*u, 1); }
+  c.strokeStyle = '#1c1a17'; c.lineWidth = 1.2*u; c.strokeRect(34*u,34*u,W-68*u,H-68*u);
+  c.lineWidth = .6*u; c.strokeRect(44*u,44*u,W-88*u,H-88*u);
+  c.textAlign = 'center'; c.fillStyle = '#6c655a';
+  c.font = `${12*u}px "Tenor Sans", sans-serif`;
+  const sp = (t) => [...t].join(String.fromCharCode(8202));
+  c.fillText(sp('THE CLEAN MOUTH COLLECTION  ·  ROOM VII'), W/2, 96*u);
+  c.fillStyle = '#1c1a17';
+  c.font = `${64*u}px Italiana, serif`; c.fillText('Certificate', W/2, 178*u);
+  c.font = `${30*u}px Italiana, serif`; c.fillText('of Clean Mouth', W/2, 222*u);
+  c.fillStyle = '#4d4840'; c.font = `${15*u}px "Tenor Sans", sans-serif`;
+  c.fillText('This is to certify that', W/2, 284*u);
+  c.fillStyle = '#1c1a17';
+  let nm = (name||'A Patient Holder').trim().slice(0,28) || 'A Patient Holder';
+  c.font = `${58*u}px "Just Another Hand", cursive`; c.fillText(nm, W/2, 348*u);
+  c.strokeStyle = 'rgba(28,26,23,.35)'; c.lineWidth = u; c.beginPath(); c.moveTo(250*u,362*u); c.lineTo(750*u,362*u); c.stroke();
+  c.fillStyle = '#6c655a'; c.font = `${13*u}px "Fragment Mono", monospace`;
+  const w = (wal||'').trim(); c.fillText(w ? (w.length > 20 ? w.slice(0,6)+'…'+w.slice(-6) : w) : 'wallet withheld', W/2, 388*u);
+  c.fillStyle = '#4d4840'; c.font = `${15*u}px "Tenor Sans", sans-serif`;
+  c.fillText('kept a clean mouth today: bought, perhaps; held, certainly; sold, never.', W/2, 432*u);
+  c.fillText('Entitled to a share of the jar at 00:00 UTC, pro rata, as is proper.', W/2, 456*u);
+  c.textAlign = 'left'; c.fillStyle = '#1c1a17';
+  c.font = `${40*u}px "Just Another Hand", cursive`; c.fillText('Sr. Agnes', 96*u, 560*u);
+  c.strokeStyle = 'rgba(28,26,23,.5)'; c.beginPath(); c.moveTo(92*u,570*u); c.lineTo(320*u,570*u); c.stroke();
+  c.fillStyle = '#6c655a'; c.font = `${10.5*u}px "Tenor Sans", sans-serif`; c.fillText(sp('KEEPER OF THE JAR'), 96*u, 590*u);
+  c.textAlign = 'right';
+  const d = new Date(); c.font = `${12*u}px "Fragment Mono", monospace`;
+  c.fillText(d.toISOString().slice(0,10) + ' · $JAR · CA [coming soon]', W-96*u, 570*u);
+  c.fillText('decorative · demo · not proof of anything', W-96*u, 590*u);
+  roundedSeal(c, W/2, 560*u, 52*u);
+};
+const kN = $('#kName'), kW = $('#kWal'), prev = $('#certPrev');
+function certUpdate(){ S.drawCert(prev, kN.value, kW.value); S.emit('cert'); }
+[kN,kW].forEach(el => el.addEventListener('input', certUpdate));
+$('#certf').addEventListener('submit', e => e.preventDefault());
+$('#certDl').onclick = () => {
+  const cv = document.createElement('canvas'); cv.width = 2000; cv.height = 1414;
+  S.drawCert(cv, kN.value, kW.value);
+  cv.toBlob(b => {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b);
+    a.download = 'certificate-of-clean-mouth.png'; document.body.append(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  }, 'image/png');
+};
+$('#certLook').onclick = () => S.emit('look');
+S.certUpdate = certUpdate;
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(certUpdate);
+certUpdate();
+
+/* ---- initial stop from hash ---- */
+const m = location.hash.match(/stop-(\d)/);
+if (m) S.initial = Math.min(5, Math.max(0, +m[1]-1));
+if (S.initial) S.go(S.initial);
+
+/* veil safety: never trap visitors behind the loader */
+setTimeout(() => $('#veil').classList.add('gone'), 5000);
+})();
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+const S = window.JAR;
+const stageEl = document.getElementById('stage');
+const veil = document.getElementById('veil');
+
+let renderer;
+try {
+  const test = document.createElement('canvas');
+  if (!(test.getContext('webgl2') || test.getContext('webgl'))) throw new Error('no webgl');
+  renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+} catch (e) {
+  document.documentElement.classList.add('no-gl');
+  veil.classList.add('gone');
+  throw e;
+}
+
+/* ---------- renderer ---------- */
+const DPR_MAX = Math.min(window.devicePixelRatio || 1, 2);
+let dpr = Math.min(DPR_MAX, 1.5);
+renderer.setPixelRatio(dpr);
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.VSMShadowMap;
+stageEl.appendChild(renderer.domElement);
+renderer.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); document.documentElement.classList.add('no-gl'); });
+
+const CREAM = new THREE.Color('#ebe6de');
+const scene = new THREE.Scene();
+scene.background = CREAM.clone();
+scene.fog = new THREE.Fog(CREAM, 11, 26);
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envTex = pmrem.fromScene(new RoomEnvironment(), 0.035).texture;
+scene.environment = envTex;
+scene.environmentIntensity = 0.55;
+
+const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 60);
+
+/* ---------- lights: one soft skylight, like a gallery ---------- */
+const hemi = new THREE.HemisphereLight('#fffaf2', '#cfc6b8', 0.9);
+scene.add(hemi);
+const key = new THREE.SpotLight('#fff6ea', 60, 0, 0.55, 1, 2);
+key.position.set(1.6, 8.5, 3.2);
+key.target.position.set(0, 0.6, 0);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.near = 3; key.shadow.camera.far = 16;
+key.shadow.radius = 14; key.shadow.blurSamples = 20; key.shadow.bias = -0.0004;
+scene.add(key, key.target);
+const fill = new THREE.DirectionalLight('#f3efe8', 0.6);
+fill.position.set(-5, 3, -2);
+scene.add(fill);
+
+/* ---------- the seamless cyclorama (lathe: floor -> cove -> wall) ---------- */
+{
+  const pts = [], R = 10, cove = 3.2, H = 12;
+  pts.push(new THREE.Vector2(0.001, 0));
+  for (let i=0;i<=8;i++) pts.push(new THREE.Vector2((R-cove)*i/8, 0));
+  for (let i=1;i<=24;i++){ const a = i/24*Math.PI/2; pts.push(new THREE.Vector2(R-cove + Math.sin(a)*cove, cove - Math.cos(a)*cove)); }
+  pts.push(new THREE.Vector2(R, H));
+  const g = new THREE.LatheGeometry(pts, 128);
+  const m = new THREE.MeshStandardMaterial({ color:'#efebe4', roughness:1, metalness:0, side:THREE.BackSide, envMapIntensity:.35 });
+  const cyc = new THREE.Mesh(g, m); cyc.receiveShadow = true; scene.add(cyc);
+}
+
+/* ---------- plinth ---------- */
+const PLINTH_H = 1.02, PW = 0.62;
+{
+  const g = new RoundedBoxGeometry(PW, PLINTH_H, PW, 5, 0.008);
+  const m = new THREE.MeshStandardMaterial({ color:'#f7f5f1', roughness:.82, envMapIntensity:.6 });
+  const p = new THREE.Mesh(g, m); p.position.y = PLINTH_H/2; p.castShadow = true; p.receiveShadow = true; scene.add(p);
+  // shadow gap at the base
+  const gap = new THREE.Mesh(new THREE.BoxGeometry(PW-0.02, 0.012, PW-0.02), new THREE.MeshBasicMaterial({ color:'#9b9285' }));
+  gap.position.y = 0.006; scene.add(gap);
+}
+
+/* ---------- canvas helpers ---------- */
+const maxAniso = renderer.capabilities.getMaxAnisotropy();
+function canvasTex(cv){ const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(8, maxAniso); return t; }
+function mk(w,h){ const c = document.createElement('canvas'); c.width=w; c.height=h; return c; }
+
+/* ---------- brass plaque on the plinth (ticker + CA live in the world) ---------- */
+let plaque;
+function drawPlaque(){
+  const cv = mk(1024, 300), c = cv.getContext('2d');
+  const g = c.createLinearGradient(0,0,1024,300); g.addColorStop(0,'#b8955a'); g.addColorStop(.45,'#e0c48a'); g.addColorStop(.55,'#c9a86c'); g.addColorStop(1,'#9c7a43');
+  c.fillStyle = g; c.fillRect(0,0,1024,300);
+  for (let i=0;i<300;i++){ c.fillStyle = `rgba(255,255,255,${Math.random()*.05})`; c.fillRect(0, Math.random()*300, 1024, 1); }
+  c.strokeStyle = 'rgba(70,50,20,.5)'; c.lineWidth = 3; c.strokeRect(14,14,996,272);
+  c.textAlign = 'center'; c.fillStyle = '#3d2c12';
+  c.font = '30px "Tenor Sans", sans-serif'; c.fillText('S I S T E R   A G N E S', 512, 78);
+  c.font = '84px Italiana, serif'; c.fillText('The Swear Jar, 2026', 512, 170);
+  c.font = '26px "Fragment Mono", monospace'; c.fillText('$JAR  ·  SOLANA  ·  CA [coming soon]', 512, 236);
+  return cv;
+}
+{
+  const t = canvasTex(drawPlaque());
+  plaque = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.1), new THREE.MeshStandardMaterial({ map:t, metalness:.75, roughness:.35, envMapIntensity:1.2 }));
+  plaque.position.set(0, PLINTH_H - 0.16, PW/2 + 0.002);
+  scene.add(plaque);
+}
+
+/* ---------- the jar ---------- */
+const jar = new THREE.Group(); jar.position.y = PLINTH_H; scene.add(jar);
+const JR = 0.14, JRI = 0.131, JH = 0.43, NECK = 0.108, NECKI = 0.099;
+{
+  const P = (x,y) => new THREE.Vector2(x,y);
+  const pts = [];
+  // outer: bottom centre -> rounded heel -> wall -> shoulder -> neck -> thread lip -> rim
+  pts.push(P(0.0001, 0.0));
+  for (let i=0;i<=8;i++){ const a=i/8*Math.PI/2; pts.push(P(JR-0.018 + Math.sin(a)*0.018, 0.018 - Math.cos(a)*0.018)); }
+  pts.push(P(JR, 0.05), P(JR, 0.2), P(JR, 0.305));
+  for (let i=1;i<=10;i++){ const a=i/10; const e = 1-Math.pow(1-a,2); pts.push(P(JR - (JR-NECK)*e, 0.305 + a*0.06)); }
+  pts.push(P(NECK, 0.38), P(NECK+0.007, 0.386), P(NECK+0.007, 0.394), P(NECK, 0.399), P(NECK+0.007, 0.405), P(NECK+0.007, 0.413), P(NECK, 0.419));
+  pts.push(P(NECK, 0.425));
+  for (let i=0;i<=6;i++){ const a=i/6*Math.PI; pts.push(P((NECK+NECKI)/2 + Math.cos(a)*(NECK-NECKI)/2, JH - 0.005 + Math.sin(a)*0.005)); }
+  // inner (going back down)
+  pts.push(P(NECKI, 0.38));
+  for (let i=1;i<=10;i++){ const a=i/10; const e = a*a; pts.push(P(NECKI + (JRI-NECKI)*(1-Math.pow(1-a,2)), 0.36 - a*0.055)); }
+  pts.push(P(JRI, 0.2), P(JRI, 0.05));
+  for (let i=0;i<=8;i++){ const a=i/8*Math.PI/2; pts.push(P(JRI - 0.012 + Math.cos(a)*0.012, 0.034 - Math.sin(a)*0.012)); }
+  pts.push(P(0.0001, 0.022));
+  const g = new THREE.LatheGeometry(pts, 128);
+  g.computeVertexNormals();
+  const glass = new THREE.MeshPhysicalMaterial({
+    color:'#ffffff', metalness:0, roughness:0.0, transmission:1, thickness:0.12, ior:1.52,
+    attenuationColor:new THREE.Color('#e4f1ea'), attenuationDistance:2.5,
+    specularIntensity:1, clearcoat:1, clearcoatRoughness:0.02, envMapIntensity:1.6, side:THREE.DoubleSide,
+  });
+  const glassMesh = new THREE.Mesh(g, glass);
+  jar.add(glassMesh);
+  S.glass = glass;
+}
+/* caustic + contact shadow under the jar */
+{
+  const cv = mk(512,512), c = cv.getContext('2d');
+  const g = c.createRadialGradient(256,256,0,256,256,256);
+  g.addColorStop(0,'rgba(255,252,240,.0)'); g.addColorStop(.42,'rgba(255,250,235,.0)');
+  g.addColorStop(.46,'rgba(60,54,45,.0)'); g.addColorStop(.5,'rgba(60,54,45,.38)'); g.addColorStop(.6,'rgba(60,54,45,.12)'); g.addColorStop(1,'rgba(60,54,45,0)');
+  c.fillStyle = g; c.fillRect(0,0,512,512);
+  // a bright caustic crescent thrown forward by the glass
+  const g2 = c.createRadialGradient(300,330,10,290,320,120); g2.addColorStop(0,'rgba(255,246,222,.3)'); g2.addColorStop(1,'rgba(255,245,215,0)');
+  c.fillStyle = g2; c.beginPath(); c.ellipse(300,320,120,70,.5,0,Math.PI*2); c.fill();
+  const m = new THREE.MeshBasicMaterial({ map:canvasTex(cv), transparent:true, depthWrite:false, toneMapped:false });
+  const q = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.62), m); q.rotation.x = -Math.PI/2; q.position.y = 0.0015; q.renderOrder = 2;
+  jar.add(q);
+}
+
+/* ---------- masking tape labels ---------- */
+function tapeCanvas(lines, opts={}){
+  const W = opts.w || 640, H = opts.h || 180, cv = mk(W,H), c = cv.getContext('2d');
+  c.save(); c.translate(W/2, H/2); c.rotate((opts.rot ?? (Math.random()-.5)*.06));
+  const tw = W*.94, th = H*(opts.fill||.62);
+  // torn edges
+  c.beginPath();
+  const jag = (x0, y0, y1, dir) => { const n = 9; for (let i=0;i<=n;i++){ const y = y0 + (y1-y0)*i/n; c.lineTo(x0 + dir*(Math.random()*8), y); } };
+  c.moveTo(-tw/2, -th/2);
+  c.lineTo(tw/2, -th/2 + (Math.random()-.5)*2);
+  jag(tw/2, -th/2, th/2, -1);
+  c.lineTo(-tw/2, th/2);
+  jag(-tw/2, th/2, -th/2, 1);
+  c.closePath();
+  c.fillStyle = opts.color || '#e8dab4'; c.fill();
+  c.clip();
+  // crepe texture
+  for (let i=0;i<th;i+=2){ c.fillStyle = `rgba(120,95,50,${Math.random()*.06})`; c.fillRect(-tw/2, -th/2+i, tw, 1); }
+  for (let i=0;i<160;i++){ c.fillStyle = `rgba(255,255,255,${Math.random()*.08})`; c.fillRect(-tw/2+Math.random()*tw, -th/2+Math.random()*th, 2+Math.random()*16, 1); }
+  c.fillStyle = '#1d1a16'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  lines.forEach((l,i) => {
+    c.font = `${l.size}px ${l.font || '"Just Another Hand", cursive'}`;
+    c.fillStyle = l.color || '#1d1a16';
+    c.fillText(l.t, (Math.random()-.5)*6, l.y*th/2);
+  });
+  c.restore();
+  return cv;
+}
+const tapeGroup = new THREE.Group(); jar.add(tapeGroup);
+function tapeMesh(cv, theta, span, y, h, r=JR+0.0012){
+  const g = new THREE.CylinderGeometry(r, r, h, 24, 1, true, theta - span/2, span);
+  const t = canvasTex(cv);
+  const m = new THREE.MeshStandardMaterial({ map:t, alphaTest:.45, roughness:.9, side:THREE.DoubleSide, envMapIntensity:.4 });
+  const mesh = new THREE.Mesh(g, m); mesh.position.y = y;
+  return mesh;
+}
+let mainTape;
+function buildMainTape(){
+  if (mainTape){ tapeGroup.remove(mainTape); mainTape.material.map.dispose(); }
+  const cv = tapeCanvas([
+    { t:'SWEAR JAR', size:150, y:-.2 },
+    { t:'$JAR  ·  CA [coming soon]  ·  sr. a.', size:52, y:.62, color:'#3a342b' }
+  ], { w:1024, h:360, fill:.86, rot:-.025 });
+  mainTape = tapeMesh(cv, 0, 1.9, 0.17, 0.096);
+  tapeGroup.add(mainTape);
+}
+const sinnerSlots = [
+  [ 1.55, .255], [ 1.95, .105], [ 2.6, .215], [-1.6, .235], [-2.2, .09], [ 3.05, .12], [-2.75, .27], [1.18, .07], [-1.15, .06], [ .0, .282 ], [2.3, .29], [-.95, .29]
+];
+const sinners = []; let slotNext = 0;
+function addSinner(wallet, amt, animate){
+  const [theta, y] = sinnerSlots[slotNext % sinnerSlots.length]; slotNext++;
+  const old = sinners.find(s => s.slot === (slotNext-1) % sinnerSlots.length);
+  if (old){ tapeGroup.remove(old.mesh); old.mesh.material.map.dispose(); old.mesh.geometry.dispose(); sinners.splice(sinners.indexOf(old),1); }
+  const cv = tapeCanvas([
+    { t: S.short(wallet), size:92, y:-.18 },
+    { t:`sold ${amt} · no share tonight`, size:44, y:.62, color:'#6b2020' }
+  ], { w:640, h:220, fill:.8, color: ['#e8dab4','#eadfbf','#e3d3a8'][Math.random()*3|0] });
+  const span = 0.78 + Math.random()*.08;
+  const mesh = tapeMesh(cv, theta + (Math.random()-.5)*.1, span, y, 0.036, JR + 0.0016 + sinners.length*0.00002);
+  mesh.userData.born = animate ? performance.now() : -1e9;
+  if (animate) mesh.scale.set(1, 0.001, 1);
+  tapeGroup.add(mesh);
+  sinners.push({ mesh, slot:(slotNext-1) % sinnerSlots.length });
+}
+
+/* ---------- SOL coins with a little physics ---------- */
+const COIN_R = 0.02, COIN_H = 0.0034, MAXC = 520;
+function coinFace(){
+  const cv = mk(256,256), c = cv.getContext('2d');
+  const g = c.createRadialGradient(100,90,10,128,128,130); g.addColorStop(0,'#f2f1ee'); g.addColorStop(.7,'#b9b8b5'); g.addColorStop(1,'#8d8c89');
+  c.fillStyle = g; c.fillRect(0,0,256,256);
+  c.strokeStyle = 'rgba(40,40,40,.35)'; c.lineWidth = 6; c.beginPath(); c.arc(128,128,112,0,Math.PI*2); c.stroke();
+  const lg = c.createLinearGradient(60,190,196,66); lg.addColorStop(0,'#8c47f5'); lg.addColorStop(1,'#1fd9a0');
+  c.fillStyle = lg;
+  const bar = (y, flip) => { c.beginPath(); if (!flip){ c.moveTo(82,y); c.lineTo(190,y); c.lineTo(174,y+20); c.lineTo(66,y+20); } else { c.moveTo(66,y); c.lineTo(174,y); c.lineTo(190,y+20); c.lineTo(82,y+20); } c.closePath(); c.fill(); };
+  bar(78,false); bar(118,true); bar(158,false);
+  return cv;
+}
+const coinGeo = new THREE.CylinderGeometry(COIN_R, COIN_R, COIN_H, 32, 1);
+const faceTex = canvasTex(coinFace());
+const coinMats = [
+  new THREE.MeshStandardMaterial({ color:'#d6d4cf', metalness:1, roughness:.22, envMapIntensity:1.8 }),
+  new THREE.MeshStandardMaterial({ map:faceTex, metalness:.85, roughness:.24, envMapIntensity:1.8 }),
+  new THREE.MeshStandardMaterial({ map:faceTex, metalness:.85, roughness:.24, envMapIntensity:1.8 })
+];
+const coins = new THREE.InstancedMesh(coinGeo, coinMats, MAXC);
+coins.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+coins.count = 0; coins.frustumCulled = false;
+jar.add(coins);
+// pile heightmap
+const GN = 30, GS = (JRI*2)/GN, FLOOR = 0.024;
+const hmap = new Float32Array(GN*GN).fill(FLOOR);
+const cellOf = v => Math.min(GN-1, Math.max(0, Math.floor((v + JRI)/GS)));
+function pileAt(x,z,r){
+  let m = FLOOR;
+  const i0 = cellOf(x-r), i1 = cellOf(x+r), j0 = cellOf(z-r), j1 = cellOf(z+r);
+  for (let i=i0;i<=i1;i++) for (let j=j0;j<=j1;j++){
+    const cx = -JRI + (i+.5)*GS, cz = -JRI + (j+.5)*GS;
+    if ((cx-x)**2 + (cz-z)**2 <= r*r) m = Math.max(m, hmap[i*GN+j]);
+  }
+  return m;
+}
+function stamp(x,z,r,top){
+  const i0 = cellOf(x-r), i1 = cellOf(x+r), j0 = cellOf(z-r), j1 = cellOf(z+r);
+  for (let i=i0;i<=i1;i++) for (let j=j0;j<=j1;j++){
+    const cx = -JRI + (i+.5)*GS, cz = -JRI + (j+.5)*GS;
+    const d2 = (cx-x)**2 + (cz-z)**2;
+    if (d2 <= r*r) hmap[i*GN+j] = Math.max(hmap[i*GN+j], top - Math.sqrt(d2)*0.06);
+  }
+}
+const live = [];       // falling coins
+let nCoins = 0;
+const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _p = new THREE.Vector3(), _s = new THREE.Vector3(1,1,1), _e = new THREE.Euler(), _up = new THREE.Vector3(0,1,0), _n = new THREE.Vector3();
+function settle(x, z, idx){
+  const lim = JRI - COIN_R - 0.003, rr = Math.hypot(x,z);
+  if (rr > lim){ x *= lim/rr; z *= lim/rr; }
+  const base = pileAt(x, z, COIN_R*.9);
+  // tilt from local slope
+  const dx = pileAt(x+COIN_R, z, .006) - pileAt(x-COIN_R, z, .006);
+  const dz = pileAt(x, z+COIN_R, .006) - pileAt(x, z-COIN_R, .006);
+  _n.set(-dx/(2*COIN_R), 1, -dz/(2*COIN_R)).add(new THREE.Vector3((Math.random()-.5)*.25, 0, (Math.random()-.5)*.25)).normalize();
+  _q.setFromUnitVectors(_up, _n).multiply(new THREE.Quaternion().setFromAxisAngle(_up, Math.random()*Math.PI*2));
+  const y = base + COIN_H*.5 + 0.0004;
+  _p.set(x, y, z);
+  _m.compose(_p, _q, _s); coins.setMatrixAt(idx, _m);
+  stamp(x, z, COIN_R, y + COIN_H*.5);
+  coins.instanceMatrix.needsUpdate = true;
+}
+function dropCoin(instant){
+  if (nCoins >= MAXC) return;
+  const idx = nCoins++; coins.count = nCoins;
+  const a = Math.random()*Math.PI*2, r = Math.sqrt(Math.random());
+  if (instant){ settle(Math.cos(a)*r*(JRI-COIN_R), Math.sin(a)*r*(JRI-COIN_R), idx); return; }
+  const c = {
+    idx, p:new THREE.Vector3(Math.cos(a)*r*0.05, JH + 1.1 + Math.random()*0.2, Math.sin(a)*r*0.05),
+    v:new THREE.Vector3((Math.random()-.5)*.25, -0.3, (Math.random()-.5)*.25),
+    q:new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.random()*6, Math.random()*6, Math.random()*6)),
+    w:new THREE.Vector3((Math.random()-.5)*22, (Math.random()-.5)*10, (Math.random()-.5)*22), bounces:0, t:0
+  };
+  live.push(c);
+}
+function stepCoins(dt){
+  for (let k=live.length-1;k>=0;k--){
+    const c = live[k]; c.t += dt;
+    c.v.y -= 9.8*dt;
+    c.p.addScaledVector(c.v, dt);
+    const wl = c.w.length();
+    if (wl > 1e-4){ _q.setFromAxisAngle(_n.copy(c.w).divideScalar(wl), wl*dt); c.q.premultiply(_q); }
+    // walls (neck above shoulder, body below)
+    const lim = (c.p.y > 0.3 ? NECKI : JRI) - COIN_R*.7, rr = Math.hypot(c.p.x, c.p.z);
+    if (rr > lim && c.p.y < JH){
+      c.p.x *= lim/rr; c.p.z *= lim/rr;
+      const nx = c.p.x/rr, nz = c.p.z/rr, vn = c.v.x*nx + c.v.z*nz;
+      if (vn > 0){ c.v.x -= 1.5*vn*nx; c.v.z -= 1.5*vn*nz; if (c.bounces < 1) S.clink(.25); }
+    }
+    const floor = pileAt(c.p.x, c.p.z, COIN_R*.8) + COIN_H;
+    if (c.p.y <= floor){
+      if (c.bounces === 0 && c.v.y < -0.6){
+        c.p.y = floor; c.v.y = Math.abs(c.v.y)*0.22; c.v.x = c.v.x*.4 + (Math.random()-.5)*.35; c.v.z = c.v.z*.4 + (Math.random()-.5)*.35;
+        c.w.multiplyScalar(.5).add(new THREE.Vector3((Math.random()-.5)*14, 0, (Math.random()-.5)*14));
+        c.bounces++; S.clink(1);
+      } else {
+        settle(c.p.x, c.p.z, c.idx); live.splice(k,1); continue;
+      }
+    }
+    _m.compose(c.p, c.q, _s); coins.setMatrixAt(c.idx, _m);
+  }
+  if (live.length) coins.instanceMatrix.needsUpdate = true;
+}
+for (let i=0;i<230;i++) dropCoin(true);
+
+/* ---------- giant serif words, standing in the room ---------- */
+const words = [];
+const isPhone = () => innerWidth < 760;
+function wordCanvas(lines, sub){
+  const W = 2048, lh = 400, H = lh*lines.length + (sub ? 150 : 40), cv = mk(W,H), c = cv.getContext('2d');
+  c.fillStyle = '#211e1a'; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+  lines.forEach((l,i) => {
+    let size = 430; c.font = `${size}px Italiana, "Didot", serif`;
+    const w = c.measureText(l).width; if (w > W*.96) { size *= W*.96/w; c.font = `${size}px Italiana, "Didot", serif`; }
+    c.strokeStyle = '#211e1a'; c.lineWidth = 5; c.lineJoin = 'round'; c.strokeText(l, W/2, lh*(i+1) - 60); c.fillText(l, W/2, lh*(i+1) - 60);
+  });
+  if (sub){ c.font = '52px "Tenor Sans", sans-serif'; c.fillStyle = '#4d4840'; c.fillText(sub.split('').join(String.fromCharCode(8202,8202)), W/2, H-60); }
+  return cv;
+}
+const wordDefs = [
+  { angle:Math.PI,         R:7.4, y:1.25, wide:['The Swear Jar'], tall:['The','Swear','Jar'], width:7.0 },
+  { angle:Math.PI+1.26,    R:6.2, y:1.2,  wide:['Language.'], tall:['Lan-','guage.'], width:5.2 },
+  { angle:0.62,            R:6.2, y:1.35, wide:['00:00:00'], tall:['00:00','00'], width:6.0, sub:'UNTIL THE COLLECTION  ·  UTC', clock:true },
+  { angle:Math.PI-0.3,     R:0,   y:0,    wide:[], tall:[], width:0 },
+  { angle:-0.64,           R:6.4, y:1.25, wide:['Hold your tongue.'], tall:['Hold','your','tongue.'], width:7.2 },
+  { angle:1.88, R:6.0, y:1.3, wide:['Bless you.'], tall:['Bless','you.'], width:5.4 },
+];
+function buildWord(i){
+  const d = wordDefs[i]; if (!d.R) return;
+  const phone = isPhone();
+  let lines = phone ? d.tall : d.wide;
+  if (d.clock){ const t = S.untilMidnight(); lines = phone ? [t.slice(0,5), t.slice(6)] : [t]; }
+  const cv = wordCanvas(lines, d.sub);
+  const old = words[i];
+  const tex = canvasTex(cv);
+  const w = phone ? d.width*0.5 : d.width, h = w*cv.height/cv.width;
+  if (old){ old.mesh.material.map.dispose(); old.mesh.material.map = tex; old.depth.map = tex; old.mesh.geometry.dispose(); old.mesh.geometry = new THREE.PlaneGeometry(w,h); old.mesh.position.y = h/2 + 0.02; old.cv = cv; return; }
+  const m = new THREE.MeshBasicMaterial({ map:tex, alphaTest:.5, alphaToCoverage:true, side:THREE.DoubleSide, color:'#ffffff' });
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w,h), m);
+  const depth = new THREE.MeshDepthMaterial({ depthPacking:THREE.RGBADepthPacking, map:tex, alphaTest:.5 });
+  mesh.customDepthMaterial = depth;
+  mesh.castShadow = true;
+  mesh.position.set(Math.sin(d.angle)*d.R, h/2 + 0.02, Math.cos(d.angle)*d.R);
+  mesh.lookAt(0, mesh.position.y, 0);
+  scene.add(mesh);
+  words[i] = { mesh, depth, cv };
+}
+
+/* ---------- the floor flywheel (engraved ring around the plinth) ---------- */
+const RING_IN = 0.62, RING_OUT = 1.32;
+let ringMesh;
+const RING_STEPS = ['A TRADE','THE FEE','THE JAR','MIDNIGHT','THE SWEAR','THE HOLD'];
+function drawRing(active){
+  const N = 2048, cv = mk(N,N), c = cv.getContext('2d'), cx = N/2, u = N/2/RING_OUT;
+  c.translate(cx,cx);
+  c.strokeStyle = 'rgba(33,30,26,.55)'; c.lineWidth = 3;
+  c.beginPath(); c.arc(0,0,RING_OUT*u - 8,0,Math.PI*2); c.stroke();
+  c.lineWidth = 1.5; c.beginPath(); c.arc(0,0,RING_IN*u + 6,0,Math.PI*2); c.stroke();
+  const mid = (RING_IN+RING_OUT)/2*u;
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  RING_STEPS.forEach((s,i) => {
+    const a0 = i/6*Math.PI*2;             // step centre
+    const on = i === active;
+    // roman numeral
+    c.save(); c.rotate(a0); c.translate(0, -(RING_OUT*u - 70));
+    c.fillStyle = on ? '#7a2323' : 'rgba(33,30,26,.75)'; c.font = '64px Italiana, serif'; c.fillText(['I','II','III','IV','V','VI'][i], 0, 0); c.restore();
+    // label set on the arc
+    c.font = `${on?54:50}px "Tenor Sans", sans-serif`; c.fillStyle = on ? '#7a2323' : 'rgba(33,30,26,.82)';
+    const chars = [...s]; const r = mid - 10; const spacing = 0.034 * (1.02);
+    const total = (chars.length-1)*spacing;
+    chars.forEach((ch,k) => { c.save(); c.rotate(a0 - total/2 + k*spacing); c.translate(0, -r); c.fillText(ch, 0, 0); c.restore(); });
+    // arrow between steps
+    c.save(); c.rotate(a0 + Math.PI/6); c.strokeStyle = 'rgba(33,30,26,.55)'; c.lineWidth = 3;
+    c.beginPath(); c.arc(0,0,mid-10, -Math.PI/2 - .14, -Math.PI/2 + .14); c.stroke();
+    c.translate(Math.cos(-Math.PI/2+.14)*(mid-10), Math.sin(-Math.PI/2+.14)*(mid-10)); c.rotate(.14);
+    c.beginPath(); c.moveTo(-14,-12); c.lineTo(0,0); c.lineTo(-14,12); c.stroke(); c.restore();
+  });
+  // tiny ticks
+  for (let i=0;i<180;i++){ const a = i/180*Math.PI*2; c.save(); c.rotate(a); c.fillStyle='rgba(33,30,26,.35)'; c.fillRect(-1, -(RING_OUT*u-24), 2, i%5?8:18); c.restore(); }
+  return cv;
+}
+let ringActive = -1;
+function setRing(i){
+  if (i === ringActive && ringMesh) return; ringActive = i;
+  const tex = canvasTex(drawRing(i));
+  if (!ringMesh){
+    ringMesh = new THREE.Mesh(new THREE.PlaneGeometry(RING_OUT*2, RING_OUT*2), new THREE.MeshStandardMaterial({ map:tex, transparent:true, depthWrite:false, roughness:1, polygonOffset:true, polygonOffsetFactor:-2 }));
+    ringMesh.rotation.x = -Math.PI/2; ringMesh.position.y = 0.002; ringMesh.receiveShadow = true;
+    scene.add(ringMesh);
+  } else { ringMesh.material.map.dispose(); ringMesh.material.map = tex; }
+}
+// a coin rolling around the loop, forever
+const roller = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.012, 48), [coinMats[0], coinMats[1], coinMats[2]]);
+roller.castShadow = true; scene.add(roller);
+
+/* ---------- velvet rope + a small card ---------- */
+{
+  const brass = new THREE.MeshStandardMaterial({ color:'#b08d52', metalness:1, roughness:.28 });
+  const postAt = (x,z) => {
+    const g = new THREE.Group();
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(.12,.14,.03,40), brass); base.position.y = .015;
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.86,20), brass); pole.position.y = .46;
+    const top = new THREE.Mesh(new THREE.SphereGeometry(.035,24,16), brass); top.position.y = .91;
+    [base,pole,top].forEach(m => { m.castShadow = true; g.add(m); });
+    g.position.set(x,0,z); scene.add(g);
+  };
+  const Z = 1.72, X = 0.95;
+  postAt(-X, Z); postAt(X, Z);
+  const pts = []; for (let i=0;i<=24;i++){ const t = i/24; pts.push(new THREE.Vector3(-X + 2*X*t, .86 - Math.sin(t*Math.PI)*.2, Z)); }
+  const rope = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 64, .016, 12), new THREE.MeshPhysicalMaterial({ color:'#6a1c1c', roughness:.9, sheen:1, sheenColor:new THREE.Color('#c05a5a'), sheenRoughness:.5 }));
+  rope.castShadow = true; scene.add(rope);
+  const cv = mk(512,200), c = cv.getContext('2d');
+  c.fillStyle = '#faf8f3'; c.fillRect(0,0,512,200); c.strokeStyle = 'rgba(0,0,0,.25)'; c.strokeRect(8,8,496,184);
+  c.fillStyle = '#1c1a17'; c.textAlign='center'; c.font = '58px Italiana, serif'; c.fillText('Please do not sell.', 256, 112);
+  c.font = '20px "Tenor Sans", sans-serif'; c.fillStyle = '#6c655a'; c.fillText('T H E   M A N A G E M E N T', 256, 158);
+  const card = new THREE.Mesh(new THREE.BoxGeometry(.3,.118,.004), [0,1,2,3].map(()=>new THREE.MeshStandardMaterial({color:'#efece6'})).concat([new THREE.MeshStandardMaterial({ map:canvasTex(cv), roughness:.9 }), new THREE.MeshStandardMaterial({color:'#efece6'})]));
+  card.position.set(0, .56, Z + .01); card.rotation.x = -.05; card.castShadow = true; scene.add(card);
+  const str = new THREE.MeshBasicMaterial({ color:'#6b6358' });
+  [-.1,.1].forEach(x => { const s = new THREE.Mesh(new THREE.CylinderGeometry(.0015,.0015,.07,4), str); s.position.set(x,.655,Z+.01); scene.add(s); });
+  S.drawRopeCard = () => {}; // static
+}
+
+/* ---------- a white wall with the visitor's certificate ---------- */
+let certTex, certCv = mk(1000, 707);
+{
+  const wallAngle = 1.3, WR = 2.1;
+  const wall = new THREE.Mesh(new RoundedBoxGeometry(1.55, 2.3, 0.14, 3, 0.01), new THREE.MeshStandardMaterial({ color:'#f5f2ec', roughness:.9 }));
+  wall.position.set(Math.sin(wallAngle)*WR, 1.15, Math.cos(wallAngle)*WR);
+  wall.lookAt(0, 1.15, 0); wall.castShadow = true; wall.receiveShadow = true; scene.add(wall);
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.64, 0.035), new THREE.MeshStandardMaterial({ color:'#1d1b18', roughness:.5, metalness:.1 }));
+  const mat = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.58), new THREE.MeshStandardMaterial({ color:'#fbfaf7', roughness:.95 }));
+  certTex = canvasTex(certCv);
+  const art = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.62*707/1000), new THREE.MeshStandardMaterial({ map:certTex, roughness:.9 }));
+  const glassF = new THREE.Mesh(new THREE.PlaneGeometry(0.8,0.58), new THREE.MeshPhysicalMaterial({ transparent:true, opacity:.08, roughness:.05, metalness:0, color:'#ffffff', envMapIntensity:2 }));
+  frame.position.set(0, .2, .07 + .018); mat.position.set(0,.2,.07+.036); art.position.set(0,.2,.07+.0365); glassF.position.set(0,.2,.07+.038);
+  frame.castShadow = true;
+  const g = new THREE.Group(); g.add(frame, mat, art, glassF);
+  // little caption plate
+  const cv = mk(512,160), c = cv.getContext('2d'); c.fillStyle='#fbfaf7'; c.fillRect(0,0,512,160);
+  c.fillStyle='#1c1a17'; c.font='38px Italiana, serif'; c.fillText('Certificate of Clean Mouth', 24, 62);
+  c.font='20px "Tenor Sans", sans-serif'; c.fillStyle='#6c655a'; c.fillText('Ink on nothing. Issued to the visitor.', 24, 102); c.fillText('Stop 06', 24, 134);
+  const cap = new THREE.Mesh(new THREE.PlaneGeometry(.2,.0625), new THREE.MeshStandardMaterial({ map:canvasTex(cv), roughness:.9 }));
+  cap.position.set(.55, -.12, .071); g.add(cap);
+  g.position.copy(wall.position); g.quaternion.copy(wall.quaternion);
+  scene.add(g);
+  S.certWallPos = new THREE.Vector3(0, .2 + 1.15, 0.1).applyQuaternion(wall.quaternion).add(new THREE.Vector3(wall.position.x, 0, wall.position.z));
+  S.certWallPos.y = 1.35;
+  S.certNormal = new THREE.Vector3(0,0,1).applyQuaternion(wall.quaternion);
+}
+function paintCertTex(){ S.drawCert(certCv, document.getElementById('kName').value, document.getElementById('kWal').value); certTex.needsUpdate = true; }
+S.on('cert', paintCertTex);
+
+/* ---------- dust in the light ---------- */
+let dust;
+{
+  const N = 260, pos = new Float32Array(N*3);
+  for (let i=0;i<N;i++){ pos[i*3] = (Math.random()-.5)*3; pos[i*3+1] = Math.random()*3.2; pos[i*3+2] = (Math.random()-.5)*3; }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const cv = mk(64,64), c = cv.getContext('2d'); const gr = c.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle = gr; c.fillRect(0,0,64,64);
+  dust = new THREE.Points(g, new THREE.PointsMaterial({ size:.012, map:canvasTex(cv), transparent:true, opacity:.55, depthWrite:false, color:'#fffaf0' }));
+  scene.add(dust);
+}
+
+/* ---------- camera stops (orbit around the plinth) ---------- */
+// a: camera azimuth, d: distance, h: height, ty: look-at height, tx/tz: look-at offset
+const STOPS = [
+  { a:0.0,   d:2.7, h:1.4, ty:1.2 },
+  { a:0.95+Math.PI*0, d:1.05, h:1.28, ty:1.2 },
+  { a:0.62+Math.PI,   d:2.9,  h:1.38, ty:1.22 },
+  { a:0.35,  d:2.35, h:3.55, ty:0.25 },
+  { a:-0.64+Math.PI,  d:2.6,  h:1.36, ty:1.18 },
+  { a:2.3,   d:3.2,  h:1.5,  ty:1.3, look:true },
+];
+// fix stop 1 (Language.) so that the word is behind the jar
+STOPS[1].a = wordDefs[1].angle - Math.PI;
+STOPS[5].a = wordDefs[5].angle - Math.PI;
+const cam = { a:STOPS[0].a, d:STOPS[0].d, h:STOPS[0].h, ty:STOPS[0].ty, tx:0, tz:0 };
+let from = null, to = null, tStart = 0, tDur = 1800;
+const drag = { yaw:0, pitch:0, vy:0, active:false, x:0, y:0 };
+function targetFor(i){
+  const s = STOPS[i], t = { a:s.a, d:s.d, h:s.h, ty:s.ty, tx:0, tz:0 };
+  const phone = isPhone(), aspect = innerWidth/innerHeight;
+  if (phone || aspect < 1){ t.d *= i === 3 ? 1.6 : 1.32 + (i===1 ? .45 : 0); t.h += i === 3 ? 1.4 : .12; }
+  if (i === 5 && s.look){
+    // frame the jar and the certificate wall together
+    const w = S.certWallPos; t.tx = w.x*.42; t.tz = w.z*.42; t.ty = 1.3;
+  }
+  return t;
+}
+function lookAtCert(){
+  const w = S.certWallPos, n = S.certNormal;
+  go({ a:Math.atan2(n.x, n.z), d:isPhone() ? 2.1 : 1.3, h:1.38, ty:1.33, tx:w.x, tz:w.z });
+}
+function shortest(a, b){ let d = b - a; while (d > Math.PI) d -= Math.PI*2; while (d < -Math.PI) d += Math.PI*2; return a + d; }
+function go(t){
+  from = { ...cam }; to = { ...t }; to.a = shortest(cam.a, t.a);
+  tStart = performance.now(); tDur = S.reduced ? 1 : 1900;
+  drag.yaw *= .0; drag.pitch = 0;
+}
+S.on('stop', i => { go(targetFor(i)); if (i === 5) paintCertTex(); });
+S.on('look', () => lookAtCert());
+const ease = t => t<.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+
+/* drag to walk around */
+const cvs = renderer.domElement;
+cvs.addEventListener('pointerdown', e => { drag.active = true; drag.x = e.clientX; drag.y = e.clientY; stageEl.classList.add('dragging'); cvs.setPointerCapture(e.pointerId); });
+cvs.addEventListener('pointermove', e => {
+  if (drag.active){
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY;
+    drag.vy = -dx * 0.006; drag.yaw += drag.vy; drag.pitch = Math.max(-.5, Math.min(.9, drag.pitch + dy*0.004));
+  }
+  mouse.x = e.clientX/innerWidth - .5; mouse.y = e.clientY/innerHeight - .5;
+});
+const endDrag = () => { drag.active = false; stageEl.classList.remove('dragging'); };
+cvs.addEventListener('pointerup', endDrag); cvs.addEventListener('pointercancel', endDrag);
+const mouse = { x:0, y:0, sx:0, sy:0 };
+
+/* ---------- sizing, view offset ---------- */
+function resize(){
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h;
+  const phone = w < 760;
+  camera.fov = phone ? 44 : (w/h < 1.2 ? 40 : 32);
+  // shift the subject away from the wall label
+  if (phone) camera.setViewOffset(w, h, 0, h*0.22, w, h);
+  else camera.setViewOffset(w, h, -w*0.11, h*0.03, w, h);
+  camera.updateProjectionMatrix();
+}
+let lastPhone = isPhone();
+addEventListener('resize', () => {
+  resize();
+  if (isPhone() !== lastPhone){ lastPhone = isPhone(); wordDefs.forEach((_,i) => buildWord(i)); go(targetFor(S.stop)); }
+});
+
+/* ---------- build everything once fonts are in ---------- */
+function buildTextures(){
+  wordDefs.forEach((_,i) => buildWord(i));
+  buildMainTape();
+  setRing(0); ringActive = -1; setRing(0);
+  if (!sinners.length) S.seedSinners.forEach(s => addSinner(s.wallet, s.amt, false));
+  paintCertTex();
+  // repaint plaque
+  plaque.material.map.dispose(); plaque.material.map = canvasTex(drawPlaque());
+}
+const fontsReady = document.fonts ? Promise.race([
+  Promise.all(['400 100px Italiana','400 20px "Tenor Sans"','400 20px "Fragment Mono"','400 40px "Just Another Hand"'].map(f => document.fonts.load(f))),
+  new Promise(r => setTimeout(r, 2500))
+]) : Promise.resolve();
+buildTextures();
+fontsReady.then(() => { sinners.forEach(s => { tapeGroup.remove(s.mesh); }); sinners.length = 0; slotNext = 0; buildTextures(); });
+
+S.on('trade', ({sell, wallet, amt}) => {
+  const n = sell ? 2 : 1 + (Math.random() < .5 ? 1 : 0);
+  for (let i=0;i<n;i++) setTimeout(() => dropCoin(S.reduced), i*140);
+  if (sell) addSinner(wallet, amt, !S.reduced);
+});
+S.on('clock', t => { if (wordDefs[2] && words[2]) buildWord(2); });
+
+/* ---------- loop ---------- */
+resize();
+const initial = S.stop || 0;
+Object.assign(cam, targetFor(initial));
+const clock = new THREE.Clock();
+let raf = 0, frames = 0, acc = 0, lastAdj = 0;
+function frame(){
+  raf = requestAnimationFrame(frame);
+  const dt = Math.min(clock.getDelta(), 1/20), t = clock.elapsedTime, now = performance.now();
+
+  // camera tween along the orbit
+  if (to){
+    const k = Math.min(1, (now - tStart)/tDur), e = ease(k);
+    for (const key of ['a','d','h','ty','tx','tz']) cam[key] = from[key] + ((to[key] ?? 0) - from[key]) * e;
+    // lift over the rope while travelling
+    cam.hLift = Math.sin(k*Math.PI) * (Math.abs(to.a - from.a) > .5 ? .35 : 0);
+    if (k >= 1) { to = null; cam.hLift = 0; }
+  }
+  if (!drag.active){ drag.yaw *= 0.985; drag.pitch *= 0.97; }
+  mouse.sx += (mouse.x - mouse.sx)*.04; mouse.sy += (mouse.y - mouse.sy)*.04;
+  const drift = S.reduced ? 0 : Math.sin(t*.12)*.035;
+  const a = cam.a + drag.yaw + drift + (S.reduced ? 0 : mouse.sx*.06);
+  const h = cam.h + (cam.hLift||0) + drag.pitch + (S.reduced ? 0 : -mouse.sy*.06);
+  camera.position.set(cam.tx + Math.sin(a)*cam.d, h, cam.tz + Math.cos(a)*cam.d);
+  camera.lookAt(cam.tx, cam.ty, cam.tz);
+
+  stepCoins(dt);
+
+  // newly taped sinners: press onto the glass
+  sinners.forEach(s => { const b = s.mesh.userData.born; if (b > 0){ const k = Math.min(1, (now-b)/650); s.mesh.scale.y = 0.001 + (1-0.001)*(1 - Math.pow(1-k,3)); if (k>=1) s.mesh.userData.born = -1; } });
+
+  // rolling coin on the flywheel
+  const speed = S.reduced ? 0 : .22;
+  const ang = (t*speed) % (Math.PI*2);
+  const rr = (RING_IN+RING_OUT)/2 + 0.12;
+  // ring texture: step i is centred at angle i/6*2π clockwise from the top (−z) when seen from above
+  const wx = Math.sin(ang)*rr, wz = -Math.cos(ang)*rr;
+  roller.position.set(wx, 0.075, wz);
+  roller.rotation.set(0, 0, 0);
+  roller.quaternion.setFromEuler(new THREE.Euler(0, -ang, 0)).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI/2))).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), -t*speed*rr/0.075));
+  const stepIdx = Math.floor(((ang + Math.PI/6) % (Math.PI*2)) / (Math.PI/3));
+  if (stepIdx !== ringActive){ setRing(stepIdx); document.querySelectorAll('#wheel li').forEach((li,k) => li.classList.toggle('on', k === stepIdx)); }
+
+  // dust
+  if (!S.reduced){ const p = dust.geometry.attributes.position; for (let i=0;i<p.count;i++){ let y = p.getY(i) + dt*.02; if (y > 3.2) y = 0; p.setY(i, y); p.setX(i, p.getX(i) + Math.sin(t*.3 + i)*dt*.004); } p.needsUpdate = true; }
+
+  renderer.render(scene, camera);
+
+  // adaptive pixel ratio
+  frames++; acc += dt;
+  if (acc > 1.2 && now - lastAdj > 1500){
+    const fps = frames/acc; frames = 0; acc = 0; lastAdj = now;
+    if (fps < 48 && dpr > 0.7){ dpr = Math.max(0.7, dpr - 0.2); renderer.setPixelRatio(dpr); resize(); }
+    else if (fps > 58 && dpr < DPR_MAX){ dpr = Math.min(DPR_MAX, dpr + 0.1); renderer.setPixelRatio(dpr); resize(); }
+  }
+}
+function start(){ if (!raf){ clock.getDelta(); raf = requestAnimationFrame(frame); } }
+function stop(){ cancelAnimationFrame(raf); raf = 0; }
+document.addEventListener('visibilitychange', () => document.hidden ? stop() : start());
+start();
+requestAnimationFrame(() => requestAnimationFrame(() => veil.classList.add('gone')));
+</script>
+</body>
+</html>

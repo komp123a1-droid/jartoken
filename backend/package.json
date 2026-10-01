@@ -1,0 +1,24 @@
+{
+  "name": "swearjar-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "$JAR — the swear jar: swear bot, sinner ledger, midnight collection, public API",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node --no-warnings --env-file-if-exists=.env src/index.js",
+    "collect": "node --no-warnings --env-file-if-exists=.env scripts/collect-now.js",
+    "test": "node --no-warnings scripts/selftest.js",
+    "simulate": "node --no-warnings scripts/simulate-day.js",
+    "tg": "node --no-warnings --env-file-if-exists=.env scripts/tg.js",
+    "x": "node --no-warnings --env-file-if-exists=.env scripts/x.js",
+    "import-key": "node --no-warnings scripts/import-key.js",
+    "devnet": "node --no-warnings scripts/devnet-test.js",
+    "test:all": "npm test && npm run simulate && node --no-warnings scripts/devnet-test.js offline"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "@solana/web3.js": "1.99.0"
+  }
+}

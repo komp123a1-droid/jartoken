@@ -1,0 +1,16 @@
+# secrets — never commit
+.env
+.env.*
+!.env.example
+**/keys/
+*.key
+**/.admin-token
+
+# local data
+node_modules/
+*.db
+*.db-*
+*.log
+
+# local tunnel helper
+cloudflared-empty.yml

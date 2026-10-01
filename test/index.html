@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="sr-Latn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>$JAR · Launch control</title>
+<style>
+:root{
+  --bg:#f5f6f8; --panel:#ffffff; --panel2:#f0f2f5; --ink:#1b1f24; --muted:#5d6672; --line:#dde1e6;
+  --accent:#2f5bd3; --ok:#1a7f45; --ok-bg:#e3f5ea; --bad:#c62828; --bad-bg:#fde8e8;
+  --warn:#8a6300; --warn-bg:#fff4cc; --na:#6b7280; --na-bg:#eceef1;
+  --buy:#1a7f45; --sell:#c62828; --transfer:#b45309;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#111418; --panel:#1a1e24; --panel2:#222831; --ink:#e7eaee; --muted:#9aa3ae; --line:#2e3540;
+    --accent:#7aa2ff; --ok:#4cc77f; --ok-bg:#16321f; --bad:#ff6b6b; --bad-bg:#3a1a1a;
+    --warn:#ffd25e; --warn-bg:#3a3010; --na:#9aa3ae; --na-bg:#262c35;
+    --buy:#4cc77f; --sell:#ff6b6b; --transfer:#f0a24a;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent)}
+.mono,code{font-family:var(--mono);font-size:12.5px}
+header{position:sticky;top:0;z-index:10;background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px}
+.hrow{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;max-width:1200px;margin:0 auto}
+.brand{font-weight:700;font-size:16px;margin-right:auto}
+.brand small{font-weight:400;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;background:var(--na-bg);color:var(--na);white-space:nowrap}
+.badge.ok{background:var(--ok-bg);color:var(--ok)} .badge.bad{background:var(--bad-bg);color:var(--bad)} .badge.warn{background:var(--warn-bg);color:var(--warn)}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.tok{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+input,select,button{font:inherit;color:inherit}
+input[type=text],input[type=password],input[type=number],input[type=date]{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-width:0}
+button{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 11px;cursor:pointer;white-space:nowrap}
+button:hover:not(:disabled){border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+@media (prefers-color-scheme:dark){button.primary{color:#0d1220}}
+button:disabled{opacity:.45;cursor:not-allowed}
+nav{max-width:1200px;margin:8px auto 0;display:flex;gap:4px 12px;flex-wrap:wrap;font-size:12.5px}
+nav a{text-decoration:none;color:var(--muted)} nav a:hover{color:var(--accent)}
+main{max-width:1200px;margin:0 auto;padding:14px 16px 60px;display:grid;gap:14px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+section h2{margin:0 0 4px;font-size:16px}
+.sub{color:var(--muted);margin:0 0 12px;font-size:13px}
+.banner{max-width:1200px;margin:10px auto 0;padding:10px 14px;border-radius:8px;background:var(--bad-bg);color:var(--bad)}
+.banner code{background:rgba(0,0,0,.08);padding:2px 6px;border-radius:4px;color:inherit;word-break:break-all}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.card{background:var(--panel2);border-radius:8px;padding:10px 12px}
+.card .k{font-size:12px;color:var(--muted)} .card .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums} .card .s{font-size:12px;color:var(--muted)}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.kind{font-weight:700;text-transform:uppercase;font-size:11.5px}
+.kind.buy{color:var(--buy)} .kind.sell{color:var(--sell)} .kind.transfer{color:var(--transfer)}
+.addr{font-family:var(--mono);font-size:12.5px;cursor:pointer;border-bottom:1px dotted var(--muted)}
+.addr.copied{color:var(--ok);border-color:var(--ok)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.row label{font-size:12.5px;color:var(--muted)}
+.grow{flex:1 1 220px}
+.out{background:var(--panel2);border-radius:8px;padding:10px 12px;font-size:13px;margin-top:8px;overflow-x:auto}
+.out:empty{display:none}
+.err{color:var(--bad)} .okc{color:var(--ok)} .mutedc{color:var(--muted)}
+ol.steps{list-style:none;padding:0;margin:0;counter-reset:s}
+ol.steps>li{display:grid;grid-template-columns:28px 1fr auto;gap:4px 10px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}
+ol.steps>li:first-child{border-top:0}
+.n{width:24px;height:24px;border-radius:50%;background:var(--panel2);display:grid;place-items:center;font-weight:700;font-size:12px}
+.st{font-weight:700;font-size:15px;min-width:22px;text-align:center}
+.st.ok{color:var(--ok)} .st.bad{color:var(--bad)} .st.na{color:var(--na)} .st.run{color:var(--accent)}
+.step-t{font-weight:600}
+.step-d{color:var(--muted);font-size:13px}
+.step-r{grid-column:2/4;font-size:13px}
+.step-r:empty{display:none}
+.step-b{display:flex;gap:6px;align-items:center}
+.msgs{display:grid;gap:8px}
+.msg{background:var(--panel2);border-radius:8px;padding:9px 11px}
+.msg .meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted);margin-bottom:6px}
+.msg pre{margin:0;white-space:pre-wrap;word-break:break-word;font:inherit}
+.verdict{font-size:22px;font-weight:800;padding:10px 14px;border-radius:8px;margin-bottom:10px;text-align:center;letter-spacing:.02em}
+.verdict.ok{background:var(--ok-bg);color:var(--ok)} .verdict.bad{background:var(--bad-bg);color:var(--bad)} .verdict.na{background:var(--na-bg);color:var(--na)}
+ul.checks{list-style:none;padding:0;margin:0}
+ul.checks li{display:grid;grid-template-columns:24px 1fr;gap:2px 8px;padding:6px 0;border-bottom:1px solid var(--line)}
+ul.checks .d{grid-column:2;color:var(--muted);font-size:12.5px;word-break:break-word}
+ol.launch{margin:0;padding-left:22px} ol.launch li{margin:5px 0}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:8px 12px;font-size:13px;margin-top:10px}
+.confirm{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap;background:var(--warn-bg);color:var(--warn);padding:4px 8px;border-radius:6px;font-size:12.5px}
+.kv td:first-child{color:var(--muted);white-space:nowrap;font-family:var(--mono);font-size:12.5px}
+.kv td{word-break:break-all}
+.small{font-size:12px}
+.authmsg{font-size:12px}
+@media (max-width:520px){
+  ol.steps>li{grid-template-columns:26px 1fr}
+  .step-b{grid-column:2}
+  .step-r{grid-column:1/3}
+  .card .v{font-size:19px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <div class="brand">$JAR <small>· launch control</small></div>
+    <span id="b-health" class="badge"><span class="dot"></span><span>backend…</span></span>
+    <span id="b-mode" class="badge">mode ?</span>
+    <span id="b-dry" class="badge" title="Iz /admin/config, potreban admin token">DRY RUN ?</span>
+    <div class="tok">
+      <input id="token" type="password" placeholder="admin token" autocomplete="off" style="width:150px">
+      <button id="btn-connect" class="primary">poveži</button>
+      <span id="authmsg" class="authmsg mutedc"></span>
+    </div>
+  </div>
+  <nav>
+    <a href="#vodic">vodič</a><a href="#tegla">tegla uživo</a><a href="#sim">simulator</a><a href="#wallet">wallet</a>
+    <a href="#outbox">Agnes outbox</a><a href="#isplate">isplate</a><a href="#preflight">spremnost</a><a href="#config">konfiguracija</a>
+  </nav>
+</header>
+<div id="down" class="banner" hidden>
+  <b>Backend ne odgovara.</b> Pokreni ga u terminalu: <code>cd D:\desktop\jar-coin\backend &amp;&amp; npm start</code>
+  — pa osveži stranicu. <span id="down-detail" class="small"></span>
+</div>
+
+<main>
+
+<!-- 2. VODIC -->
+<section id="vodic">
+  <h2>Kako da testiraš (vodič)</h2>
+  <p class="sub">Korak po korak. Svaki korak ima dugme <b>pokreni</b> i sam proverava rezultat (✓ / ✗). Koraci 3–6 koriste jedan test wallet i rade samo u MOCK modu. Za korake 4–7 potreban je admin token.</p>
+  <div class="row"><button id="run-all" class="primary">pokreni sve redom</button><span id="scen-wallet" class="small mutedc"></span></div>
+  <ol class="steps" id="steps"></ol>
+</section>
+
+<!-- 3. TEGLA -->
+<section id="tegla">
+  <h2>Tegla uživo</h2>
+  <p class="sub">Osvežava se na 5 sekundi. Klik na wallet kopira adresu. <span id="state-meta" class="mono"></span></p>
+  <div class="cards">
+    <div class="card"><div class="k">u tegli (jarSol)</div><div class="v" id="c-jar">–</div><div class="s" id="c-jar-s"></div></div>
+    <div class="card"><div class="k">čisti holderi</div><div class="v" id="c-clean">–</div><div class="s" id="c-clean-s"></div></div>
+    <div class="card"><div class="k">grešnici danas</div><div class="v" id="c-sin">–</div><div class="s" id="c-sin-s"></div></div>
+    <div class="card"><div class="k">do sledeće isplate</div><div class="v mono" id="c-next" style="font-size:20px">–</div><div class="s" id="c-next-s"></div></div>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>vreme</th><th>vrsta</th><th>wallet</th><th class="num">tokeni</th><th>sig</th></tr></thead>
+    <tbody id="feed"><tr><td colspan="5" class="mutedc">učitavam…</td></tr></tbody>
+  </table></div>
+</section>
+
+<div class="grid2">
+<!-- 4. SIMULATOR -->
+<section id="sim">
+  <h2>Simulator (mock)</h2>
+  <p class="sub">Ubacuje lažnu transakciju kroz isti parser kao pravi Helius webhook. Prazan wallet = nasumični holder. Radi samo u MOCK modu.</p>
+  <div class="row">
+    <input id="sim-wallet" type="text" class="grow mono" placeholder="wallet (opciono)">
+    <input id="sim-tokens" type="number" min="1" placeholder="tokeni (opciono)" style="width:150px">
+  </div>
+  <div class="row">
+    <button data-sim="buy">kupovina (buy)</button>
+    <button data-sim="sell">prodaja (sell)</button>
+    <button data-sim="transfer">transfer</button>
+  </div>
+  <div id="sim-out" class="out"></div>
+</section>
+
+<!-- 5. WALLET -->
+<section id="wallet">
+  <h2>Provera walleta</h2>
+  <p class="sub">Isto što vidi posetilac sajta: da li je opsovao danas, koliko drži, procena deljenja, istorija isplata.</p>
+  <div class="row">
+    <input id="w-addr" type="text" class="grow mono" placeholder="Solana adresa">
+    <button id="w-go" class="primary">proveri</button>
+  </div>
+  <div id="w-out" class="out"></div>
+</section>
+</div>
+
+<!-- 6. OUTBOX -->
+<section id="outbox">
+  <h2>Agnes outbox</h2>
+  <p class="sub">Poslednjih 20 poruka koje je Sestra Agnes poslala ili bi poslala (status <b>log</b> = token nije podešen, samo zapisano). Potreban admin token.</p>
+  <div class="row"><button id="ob-refresh">osveži</button><span id="ob-meta" class="small mutedc"></span></div>
+  <div id="ob-list" class="msgs"></div>
+</section>
+
+<!-- 7. ISPLATE -->
+<section id="isplate">
+  <h2>Isplate</h2>
+  <p class="sub">Probna isplata sa sajta je <b>uvek dry run</b> — ništa se ne šalje. Prave isplate idu samo preko CLI-ja (<code>npm run collect -- --send</code>) ili automatski u ponoć ako je DRY_RUN=false.</p>
+  <div class="row">
+    <label for="p-day">dan (UTC)</label>
+    <input id="p-day" type="date">
+    <button id="p-today">danas</button>
+    <button id="p-yest">juče</button>
+    <button id="p-load">prikaži dan</button>
+    <span id="p-confirm-wrap"><button id="p-run" class="primary">probna isplata (dry run)</button></span>
+  </div>
+  <div id="p-sum" class="out"></div>
+  <h3 style="font-size:14px;margin:14px 0 6px">Isplate za dan <span id="p-dayl" class="mono"></span> <span class="small mutedc">(top 50)</span></h3>
+  <div class="tw"><table>
+    <thead><tr><th>#</th><th>wallet</th><th class="num">tokeni</th><th class="num">SOL</th><th>status</th><th>sig</th></tr></thead>
+    <tbody id="p-rows"><tr><td colspan="6" class="mutedc">—</td></tr></tbody>
+  </table></div>
+  <h3 style="font-size:14px;margin:16px 0 6px">Istorija</h3>
+  <div class="tw"><table>
+    <thead><tr><th>dan</th><th>status</th><th class="num">tegla</th><th class="num">za podelu</th><th class="num">čisti</th><th class="num">grešnici</th><th class="num">isplaćeno</th><th class="num">SOL</th><th class="num">ostaje</th></tr></thead>
+    <tbody id="p-hist"><tr><td colspan="9" class="mutedc">—</td></tr></tbody>
+  </table></div>
+</section>
+
+<div class="grid2">
+<!-- 8. PREFLIGHT -->
+<section id="preflight">
+  <h2>Spremnost za launch (preflight)</h2>
+  <p class="sub">Backend sam proverava podešavanja. ✓ ok · ✗ fali · — ne važi / preskočeno.</p>
+  <div class="row"><button id="pf-refresh">proveri ponovo</button></div>
+  <div id="pf-verdict" class="verdict na">—</div>
+  <ul class="checks" id="pf-list"></ul>
+
+  <h3 style="font-size:14px;margin:18px 0 6px">Launch ček-lista</h3>
+  <ol class="launch">
+    <li>Napravi <b>jar wallet</b> (hot wallet, drži samo dnevni iznos — nikad ceo trezor).</li>
+    <li>Launch na <b>pump.fun</b> sa jar walletom kao <b>creator</b> (creator fee ide u teglu).</li>
+    <li>U <code>.env</code> upiši: <code>MINT</code>, <code>PAYOUT_KEYPAIR</code>, <code>EXCLUDED_WALLETS</code> (bonding curve, pool, dev, burn), <code>HELIUS_API_KEY</code>, <code>WEBHOOK_SECRET</code>, <code>TG_BOT_TOKEN</code> / <code>TG_CHAT_ID</code> (proveri: <code>npm run tg</code>), <code>X_API_KEY</code> / <code>X_API_SECRET</code> / <code>X_ACCESS_TOKEN</code> / <code>X_ACCESS_SECRET</code> (proveri: <code>npm run x</code>).</li>
+    <li><b>Helius webhook</b>: tip <i>enhanced</i>, account = mint, URL <code>https://&lt;tunel&gt;/webhook/helius</code>, auth header = <code>WEBHOOK_SECRET</code>.</li>
+    <li><code>MODE=live</code>, <code>DRY_RUN=true</code> prvi dan.</li>
+    <li>Proveri <b>probnu isplatu</b> ovde (sekcija Isplate): grešnici nisu na listi, iznosi imaju smisla.</li>
+    <li><code>DRY_RUN=false</code>.</li>
+    <li><code>npm run collect -- --send</code> ili sačekaj ponoć (00:00 UTC).</li>
+  </ol>
+  <div class="note"><b>Pažnja:</b> automatski claim creator fee-a preko PumpPortal-a (<code>CLAIM_FEES=true</code>) <b>nije testiran</b>. Na početku claim-uj ručno na pump.fun pre ponoći.</div>
+</section>
+
+<!-- 9. CONFIG -->
+<section id="config">
+  <h2>Konfiguracija</h2>
+  <p class="sub">Iz <code>/admin/config</code>. Tajne se nikad ne vraćaju — samo da li su podešene (*Set).</p>
+  <div class="row"><button id="cfg-refresh">osveži</button></div>
+  <div class="tw"><table class="kv"><tbody id="cfg-rows"><tr><td colspan="2" class="mutedc">potreban admin token</td></tr></tbody></table></div>
+</section>
+</div>
+
+</main>
+
+<script>
+"use strict";
+// ---------- helpers ----------
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const todayUTC = () => new Date().toISOString().slice(0, 10);
+const yesterdayUTC = () => new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+const fmtSol = (n) => (n == null || isNaN(n) ? "–" : Number(n).toFixed(4));
+const lam2sol = (l) => (l == null ? null : Number(l) / 1e9);
+function fmtTok(n) {
+  n = Number(n);
+  if (!isFinite(n)) return "–";
+  const a = Math.abs(n);
+  if (a >= 1e9) return (n / 1e9).toFixed(2).replace(/\.?0+$/, "") + "B";
+  if (a >= 1e6) return (n / 1e6).toFixed(2).replace(/\.?0+$/, "") + "M";
+  if (a >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, "") + "K";
+  return String(Math.round(n));
+}
+const short = (w) => (w && w.length > 10 ? w.slice(0, 4) + "…" + w.slice(-4) : w || "");
+const fmtTime = (ms) => { const d = new Date(ms); return isNaN(d) ? "–" : d.toLocaleTimeString("sr-Latn", { hour12: false }); };
+const fmtDT = (ms) => { const d = new Date(ms); return isNaN(d) ? "–" : d.toLocaleString("sr-Latn", { hour12: false }); };
+const addrEl = (w, full) => w ? `<span class="addr" data-copy="${esc(w)}" title="${esc(w)} (klik = kopiraj)">${esc(full ? w : short(w))}</span>` : '<span class="mutedc">—</span>';
+const chip = (t, cls) => `<span class="badge ${cls || ""}">${esc(t)}</span>`;
+const kindEl = (k) => `<span class="kind ${esc(k)}">${esc(k)}</span>`;
+const yn = (b) => (b === true ? '<span class="okc">✓</span>' : b === false ? '<span class="err">✗</span>' : '<span class="mutedc">—</span>');
+function statusChip(s) {
+  s = String(s || "");
+  if (s === "sent" || s === "paid") return chip(s, "ok");
+  if (s === "dry-run" || s === "log") return chip(s, "");
+  if (s === "partial" || s === "rate-limited" || s === "empty") return chip(s, "warn");
+  if (s.startsWith("error") || s === "failed") return chip(s, "bad");
+  return chip(s);
+}
+
+// ---------- token ----------
+let token = "";
+try { token = localStorage.getItem("jar-admin-token") || ""; } catch (e) {}
+$("token").value = token;
+let authState = null; // null unknown, true ok, false 401
+
+// ---------- API ----------
+let backendUp = null;
+async function api(path, opts = {}) {
+  const headers = {};
+  if (opts.body !== undefined) headers["content-type"] = "application/json";
+  if (path.startsWith("/admin/")) headers["x-admin-token"] = token;
+  let res;
+  try {
+    res = await fetch(path, { method: opts.method || "GET", headers, body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined, cache: "no-store" });
+  } catch (e) {
+    setBackend(false, e.message);
+    return { ok: false, status: 0, data: null, error: "backend ne odgovara (" + e.message + ")" };
+  }
+  let data = null;
+  const txt = await res.text();
+  try { data = txt ? JSON.parse(txt) : null; } catch (e) { data = null; }
+  if (res.status >= 502 && res.status <= 504) setBackend(false, "HTTP " + res.status);
+  if (path.startsWith("/admin/")) {
+    if (res.status === 401) setAuth(false);
+    else if (res.status < 500 && res.status !== 404) setAuth(true);
+  }
+  if (!res.ok) {
+    let error = (data && data.error) || (data === null && txt ? txt.slice(0, 120) : "HTTP " + res.status);
+    if (res.status === 401) error = "401 — pogrešan ili prazan admin token";
+    if (res.status === 404 && path.startsWith("/admin/")) error = "404 — admin endpoint ne postoji (backend je stariji od ovog test panela?)";
+    return { ok: false, status: res.status, data, error };
+  }
+  return { ok: true, status: res.status, data };
+}
+function setBackend(up, detail) {
+  backendUp = up;
+  $("down").hidden = up;
+  if (!up) $("down-detail").textContent = detail ? "(" + detail + ")" : "";
+  const b = $("b-health");
+  b.className = "badge " + (up ? "ok" : "bad");
+  b.lastElementChild.textContent = up ? "backend radi" : "backend ne radi";
+}
+function setAuth(ok) {
+  authState = ok;
+  const m = $("authmsg");
+  if (ok === true) { m.className = "authmsg okc"; m.textContent = "✓ admin povezan"; }
+  else if (ok === false) { m.className = "authmsg err"; m.innerHTML = "<b>401</b> — token nije dobar"; }
+  else { m.className = "authmsg mutedc"; m.textContent = token ? "" : "bez tokena (admin delovi zaključani)"; }
+}
+setAuth(null);
+
+// ---------- header ----------
+let mode = null, config = null;
+function renderMode() {
+  const b = $("b-mode");
+  if (mode === "mock") { b.className = "badge warn"; b.textContent = "MOCK · test podaci"; }
+  else if (mode === "live") { b.className = "badge bad"; b.textContent = "LIVE · pravi lanac"; }
+  else { b.className = "badge"; b.textContent = "mode ?"; }
+  const d = $("b-dry");
+  if (!config) { d.className = "badge"; d.textContent = "DRY RUN ? (treba token)"; }
+  else if (config.dryRun) { d.className = "badge ok"; d.textContent = "DRY RUN · isplate se NE šalju"; }
+  else { d.className = "badge bad"; d.textContent = "DRY RUN isključen · isplate se ŠALJU"; }
+  const mockOnly = mode !== "mock";
+  document.querySelectorAll("[data-sim]").forEach((x) => { x.disabled = mockOnly; x.title = mockOnly ? "Samo u MOCK modu" : ""; });
+  renderSteps();
+}
+async function health() {
+  const r = await api("/api/health");
+  if (r.ok && r.data && r.data.ok) { setBackend(true); mode = r.data.mode; }
+  else if (r.status) setBackend(false, r.error);
+  renderMode();
+  return r;
+}
+
+$("btn-connect").onclick = async () => {
+  token = $("token").value.trim();
+  try { localStorage.setItem("jar-admin-token", token); } catch (e) {}
+  authState = null; setAuth(null);
+  $("authmsg").textContent = "proveravam…";
+  await loadConfig();
+  if (authState === null) setAuth(null);
+  loadOutbox(); loadPreflight();
+};
+$("token").addEventListener("keydown", (e) => { if (e.key === "Enter") $("btn-connect").click(); });
+
+// copy on click
+document.addEventListener("click", async (e) => {
+  const el = e.target.closest("[data-copy]");
+  if (!el) return;
+  const v = el.getAttribute("data-copy");
+  let ok = false;
+  try { await navigator.clipboard.writeText(v); ok = true; } catch (err) {
+    try { const t = document.createElement("textarea"); t.value = v; document.body.appendChild(t); t.select(); ok = document.execCommand("copy"); t.remove(); } catch (e2) {}
+  }
+  if (ok) { el.classList.add("copied"); const o = el.textContent; el.textContent = "kopirano ✓"; setTimeout(() => { el.textContent = o; el.classList.remove("copied"); }, 900); }
+});
+
+// ---------- 3. tegla uživo ----------
+let nextAt = null;
+async function loadState() {
+  const r = await api("/api/state");
+  if (!r.ok) { $("state-meta").textContent = r.error || ""; return r; }
+  const s = r.data;
+  if (s.mode) mode = s.mode;
+  $("c-jar").textContent = fmtSol(s.jarSol) + " SOL";
+  $("c-jar-s").textContent = s.jarWallet ? short(s.jarWallet) : (s.demo ? "demo tegla" : "");
+  $("c-clean").textContent = (s.cleanCount ?? 0).toLocaleString("sr-Latn");
+  $("c-clean-s").textContent = fmtTok(s.cleanTokens) + " tokena · prag " + fmtTok(s.thresholdTokens);
+  $("c-sin").textContent = (s.sinnersToday ?? 0).toLocaleString("sr-Latn");
+  $("c-sin-s").textContent = "dan " + s.day + " (UTC)";
+  nextAt = s.nextCollection ? new Date(s.nextCollection).getTime() : null;
+  $("c-next-s").textContent = s.nextCollection ? new Date(s.nextCollection).toISOString().replace("T", " ").slice(0, 16) + " UTC · min " + s.minPayoutSol + " SOL" : "";
+  $("state-meta").textContent = "CA: " + (s.ca || "–");
+  tick();
+  return r;
+}
+function tick() {
+  if (!nextAt) return;
+  let d = Math.max(0, Math.floor((nextAt - Date.now()) / 1000));
+  const h = Math.floor(d / 3600), m = Math.floor((d % 3600) / 60), s = d % 60;
+  $("c-next").textContent = [h, m, s].map((x) => String(x).padStart(2, "0")).join(":");
+}
+setInterval(tick, 1000);
+async function loadFeed() {
+  const r = await api("/api/feed?limit=15");
+  const tb = $("feed");
+  if (!r.ok) { tb.innerHTML = `<tr><td colspan="5" class="err">${esc(r.error)}</td></tr>`; return r; }
+  if (!r.data.length) { tb.innerHTML = '<tr><td colspan="5" class="mutedc">još nema transakcija</td></tr>'; return r; }
+  tb.innerHTML = r.data.map((e) => `<tr><td class="mono">${fmtTime(e.ts)}</td><td>${kindEl(e.kind)}</td><td>${addrEl(e.wallet)}</td><td class="num">${fmtTok(e.tokens)}</td><td class="mono mutedc small">${esc(String(e.sig || "").slice(0, 14))}…</td></tr>`).join("");
+  return r;
+}
+
+// ---------- 4. simulator ----------
+document.querySelectorAll("[data-sim]").forEach((b) => {
+  b.onclick = async () => {
+    const body = { kind: b.dataset.sim };
+    const w = $("sim-wallet").value.trim(), t = Number($("sim-tokens").value);
+    if (w) body.wallet = w;
+    if (t > 0) body.tokens = t;
+    $("sim-out").innerHTML = '<span class="mutedc">šaljem…</span>';
+    const r = await api("/admin/simulate", { method: "POST", body });
+    if (!r.ok) { $("sim-out").innerHTML = `<span class="err">${esc(r.error)}</span>`; return; }
+    const ev = (r.data.events || []);
+    $("sim-out").innerHTML = `<div class="okc">Zapisano događaja: <b>${esc(r.data.recorded)}</b></div>` +
+      (ev.length ? `<div class="tw"><table><tbody>${ev.map((e) => `<tr><td>${kindEl(e.kind)}</td><td>${addrEl(e.wallet)}</td><td class="num">${fmtTok(e.tokens)}</td></tr>`).join("")}</tbody></table></div>` : "") +
+      (r.data.recorded === 0 ? '<div class="mutedc small">0 = događaj nije nov (duplikat) ili wallet isključen.</div>' : "");
+    loadState(); loadFeed(); setTimeout(loadOutbox, 400);
+  };
+});
+
+// ---------- 5. wallet ----------
+async function checkWallet(addr) {
+  const out = $("w-out");
+  addr = (addr || "").trim();
+  if (!addr) { out.innerHTML = '<span class="err">Upiši adresu.</span>'; return null; }
+  out.innerHTML = '<span class="mutedc">proveravam…</span>';
+  const r = await api("/api/wallet/" + encodeURIComponent(addr));
+  if (!r.ok) { out.innerHTML = `<span class="err">${r.status === 400 ? "Neispravna adresa: " : ""}${esc(r.error)}</span>`; return r; }
+  const w = r.data, t = w.today || {};
+  const kinds = ["buy", "sell", "transfer"].map((k) => `<tr><td>${kindEl(k)}</td><td class="num">${(t[k] && t[k].count) || 0}×</td><td class="num">${fmtTok((t[k] && t[k].tokens) || 0)}</td></tr>`).join("");
+  const pays = (w.payouts || []).map((p) => `<tr><td class="mono">${esc(p.day)}</td><td class="num">${fmtSol(lam2sol(p.lamports))}</td><td>${statusChip(p.status)}</td><td class="mono small">${esc(p.sig ? String(p.sig).slice(0, 14) + "…" : "—")}</td></tr>`).join("");
+  out.innerHTML = `
+    <div style="margin-bottom:8px">${addrEl(w.wallet, true)}</div>
+    <div class="row">
+      ${w.swore ? chip("OPSOVAO danas · " + w.swearsToday + "×", "bad") : chip("čista usta danas", "ok")}
+      ${w.eligible ? chip("ima pravo na deo", "ok") : chip("nema pravo na deo", "warn")}
+    </div>
+    <table class="kv"><tbody>
+      <tr><td>dan</td><td>${esc(w.day)}</td></tr>
+      <tr><td>tokens</td><td>${fmtTok(w.tokens)} <span class="mutedc small">(${esc(w.tokens)})</span></td></tr>
+      <tr><td>swearsToday</td><td>${esc(w.swearsToday)}</td></tr>
+      <tr><td>firstSwearSig</td><td class="mono small">${esc(w.firstSwearSig || "—")}</td></tr>
+      <tr><td>estShareSol</td><td>${fmtSol(w.estShareSol)} SOL ${w.estimate ? '<span class="mutedc small">(procena, snimak holdera keširan do 5 min)</span>' : ""}</td></tr>
+    </tbody></table>
+    <div style="margin-top:8px" class="small mutedc">danas po vrsti</div>
+    <table><tbody>${kinds}</tbody></table>
+    <div style="margin-top:8px" class="small mutedc">isplate (${(w.payouts || []).length})</div>
+    ${pays ? `<div class="tw"><table><thead><tr><th>dan</th><th class="num">SOL</th><th>status</th><th>sig</th></tr></thead><tbody>${pays}</tbody></table></div>` : '<div class="mutedc small">nema isplata</div>'}`;
+  return r;
+}
+$("w-go").onclick = () => checkWallet($("w-addr").value);
+$("w-addr").addEventListener("keydown", (e) => { if (e.key === "Enter") $("w-go").click(); });
+
+// ---------- 6. outbox ----------
+async function loadOutbox() {
+  if (!token) { $("ob-meta").textContent = "upiši admin token gore"; $("ob-list").innerHTML = ""; return null; }
+  const r = await api("/admin/outbox?limit=20");
+  if (!r.ok) { $("ob-meta").innerHTML = `<span class="err">${esc(r.error)}</span>`; return r; }
+  $("ob-meta").textContent = r.data.length + " poruka · osveženo " + fmtTime(Date.now());
+  $("ob-list").innerHTML = r.data.length ? r.data.map((m) => `<div class="msg"><div class="meta">${chip(m.channel === "x" ? "X" : m.channel, m.channel === "x" ? "" : "")}${statusChip(m.status)}<span>#${esc(m.id)}</span><span>${fmtDT(m.ts)}</span></div><pre>${esc(m.text)}</pre></div>`).join("") : '<div class="mutedc">Agnes još ćuti.</div>';
+  return r;
+}
+$("ob-refresh").onclick = loadOutbox;
+
+// ---------- 7. isplate ----------
+$("p-day").value = todayUTC();
+$("p-today").onclick = () => { $("p-day").value = todayUTC(); loadDay(); };
+$("p-yest").onclick = () => { $("p-day").value = yesterdayUTC(); loadDay(); };
+$("p-load").onclick = () => loadDay();
+function summaryHtml(s) {
+  if (s.skipped) return `<div style="color:var(--warn)">Preskočeno: <b>${esc(s.skipped)}</b> — taj dan je već isplaćen, ništa nije ponovo računato.</div>`;
+  return `<div class="row">${statusChip(s.status)}<span class="mono">${esc(s.day)}</span><span class="small mutedc">ništa nije poslato</span></div>
+  <table class="kv"><tbody>
+    <tr><td>jarSol</td><td>${fmtSol(s.jarSol)} SOL</td></tr>
+    <tr><td>distributableSol</td><td>${fmtSol(s.distributableSol)} SOL <span class="mutedc small">(tegla − rezerva)</span></td></tr>
+    <tr><td>cleanCount</td><td>${esc(s.cleanCount)}</td></tr>
+    <tr><td>sinnerCount</td><td>${esc(s.sinnerCount)}</td></tr>
+    <tr><td>paidCount</td><td>${esc(s.paidCount)}</td></tr>
+    <tr><td>paidSol</td><td>${fmtSol(s.paidSol)} SOL</td></tr>
+    <tr><td>carrySol</td><td>${fmtSol(s.carrySol)} SOL <span class="mutedc small">(ostaje u tegli — delovi ispod minimuma)</span></td></tr>
+  </tbody></table>`;
+}
+async function runCollect(day) {
+  const r = await api("/admin/collect", { method: "POST", body: { day } });
+  return r;
+}
+// inline confirmation (no confirm())
+function askRun() {
+  const day = $("p-day").value || todayUTC();
+  const wrap = $("p-confirm-wrap");
+  wrap.innerHTML = `<span class="confirm">Probna isplata za <b class="mono">${esc(day)}</b>? Ništa se ne šalje, ali upisuje se u istoriju. <button id="p-yes" class="primary">da, pokreni</button><button id="p-no">otkaži</button></span>`;
+  $("p-no").onclick = resetRun;
+  $("p-yes").onclick = async () => {
+    wrap.innerHTML = '<span class="mutedc">računam…</span>';
+    $("p-sum").innerHTML = "";
+    const r = await runCollect(day);
+    resetRun();
+    $("p-sum").innerHTML = r.ok ? summaryHtml(r.data) : `<span class="err">${esc(r.error)}</span>`;
+    loadDay(true); loadHistory(); setTimeout(loadOutbox, 400);
+  };
+}
+function resetRun() { $("p-confirm-wrap").innerHTML = '<button id="p-run" class="primary">probna isplata (dry run)</button>'; $("p-run").onclick = askRun; }
+$("p-run").onclick = askRun;
+async function loadDay(keepSummary) {
+  const day = $("p-day").value || todayUTC();
+  $("p-dayl").textContent = day;
+  const r = await api("/api/collections/" + encodeURIComponent(day));
+  const tb = $("p-rows");
+  if (!r.ok) { tb.innerHTML = `<tr><td colspan="6" class="err">${esc(r.error)}</td></tr>`; return r; }
+  const c = r.data.collection, p = r.data.payouts || [];
+  if (!keepSummary) $("p-sum").innerHTML = c ? summaryHtml({ day: c.day, status: c.status, jarSol: c.jar_sol, distributableSol: c.distributable_sol, cleanCount: c.clean_count, sinnerCount: c.sinner_count, paidCount: c.paid_count, paidSol: c.paid_sol, carrySol: c.carry_sol }).replace("ništa nije poslato", "zapisano " + fmtDT(c.ts)) : '<span class="mutedc">Za ovaj dan još nema obračuna.</span>';
+  tb.innerHTML = p.length ? p.slice(0, 50).map((x, i) => `<tr><td class="mutedc">${i + 1}</td><td>${addrEl(x.wallet)}</td><td class="num">${fmtTok(x.tokens)}</td><td class="num">${fmtSol(lam2sol(x.lamports))}</td><td>${statusChip(x.status)}</td><td class="mono small">${esc(x.sig ? String(x.sig).slice(0, 14) + "…" : "—")}</td></tr>`).join("") + (p.length > 50 ? `<tr><td colspan="6" class="mutedc">… još ${p.length - 50}</td></tr>` : "") : '<tr><td colspan="6" class="mutedc">nema isplata za ovaj dan</td></tr>';
+  return r;
+}
+async function loadHistory() {
+  const r = await api("/api/collections");
+  const tb = $("p-hist");
+  if (!r.ok) { tb.innerHTML = `<tr><td colspan="9" class="err">${esc(r.error)}</td></tr>`; return r; }
+  tb.innerHTML = r.data.length ? r.data.map((c) => `<tr><td class="mono">${esc(c.day)}</td><td>${statusChip(c.status)}</td><td class="num">${fmtSol(c.jar_sol)}</td><td class="num">${fmtSol(c.distributable_sol)}</td><td class="num">${esc(c.clean_count)}</td><td class="num">${esc(c.sinner_count)}</td><td class="num">${esc(c.paid_count)}</td><td class="num">${fmtSol(c.paid_sol)}</td><td class="num">${fmtSol(c.carry_sol)}</td></tr>`).join("") : '<tr><td colspan="9" class="mutedc">još nijedan obračun</td></tr>';
+  return r;
+}
+
+// ---------- 8. preflight ----------
+async function loadPreflight() {
+  const v = $("pf-verdict"), list = $("pf-list");
+  if (!token) { v.className = "verdict na"; v.textContent = "potreban admin token"; list.innerHTML = ""; return null; }
+  const r = await api("/admin/preflight");
+  if (!r.ok) { v.className = "verdict na"; v.textContent = "—"; list.innerHTML = `<li><span class="err">✗</span><span class="err">${esc(r.error)}</span></li>`; return r; }
+  v.className = "verdict " + (r.data.readyForLive ? "ok" : "bad");
+  v.textContent = r.data.readyForLive ? "SPREMNO ZA LIVE" : "NIJE SPREMNO";
+  list.innerHTML = (r.data.checks || []).map((c) => `<li><span class="st ${c.ok === true ? "ok" : c.ok === false ? "bad" : "na"}">${c.ok === true ? "✓" : c.ok === false ? "✗" : "—"}</span><span>${esc(c.label)} <span class="mono mutedc small">${esc(c.id)}</span></span>${c.detail ? `<span class="d">${esc(c.detail)}</span>` : ""}</li>`).join("");
+  return r;
+}
+$("pf-refresh").onclick = loadPreflight;
+
+// ---------- 9. config ----------
+async function loadConfig() {
+  const tb = $("cfg-rows");
+  if (!token) { config = null; renderMode(); tb.innerHTML = '<tr><td colspan="2" class="mutedc">potreban admin token</td></tr>'; return null; }
+  const r = await api("/admin/config");
+  if (!r.ok) { config = null; renderMode(); tb.innerHTML = `<tr><td colspan="2" class="err">${esc(r.error)}</td></tr>`; return r; }
+  config = r.data;
+  if (config.mode) mode = config.mode;
+  renderMode();
+  tb.innerHTML = Object.entries(config).map(([k, v]) => {
+    let val;
+    if (typeof v === "boolean") val = yn(v) + (k === "dryRun" ? (v ? ' <span class="small okc">isplate se ne šalju</span>' : ' <span class="small err">isplate se šalju!</span>') : "");
+    else if (Array.isArray(v)) val = v.length ? v.map((x) => addrEl(String(x), true)).join("<br>") : '<span class="mutedc">(prazno)</span>';
+    else if (v === null || v === "") val = '<span class="mutedc">—</span>';
+    else if (typeof v === "number" && /Tokens$/.test(k)) val = `${fmtTok(v)} <span class="mutedc small">(${v})</span>`;
+    else if (typeof v === "string" && v.length >= 32 && /^[1-9A-HJ-NP-Za-km-z]+$/.test(v)) val = addrEl(v, true);
+    else val = `<span class="mono">${esc(typeof v === "object" ? JSON.stringify(v) : v)}</span>`;
+    return `<tr><td>${esc(k)}</td><td>${val}</td></tr>`;
+  }).join("");
+  return r;
+}
+$("cfg-refresh").onclick = loadConfig;
+
+// ---------- 2. vodič (scenario) ----------
+const scen = { wallet: null, wallet2: null };
+function showScen() { $("scen-wallet").innerHTML = scen.wallet ? "test wallet: " + addrEl(scen.wallet) + (scen.wallet2 ? " · drugi: " + addrEl(scen.wallet2) : "") : ""; }
+async function getWallet(w) { const r = await api("/api/wallet/" + encodeURIComponent(w)); if (!r.ok) throw new Error("/api/wallet: " + r.error); return r.data; }
+async function simulate(body) { const r = await api("/admin/simulate", { method: "POST", body }); if (!r.ok) throw new Error("/admin/simulate: " + r.error); return r.data; }
+async function outboxMaxId() { const r = await api("/admin/outbox?limit=5"); if (!r.ok) throw new Error("/admin/outbox: " + r.error); return r.data.reduce((m, x) => Math.max(m, Number(x.id) || 0), 0); }
+async function waitOutbox(afterId, pred) {
+  for (let i = 0; i < 8; i++) {
+    const r = await api("/admin/outbox?limit=10");
+    if (!r.ok) throw new Error("/admin/outbox: " + r.error);
+    const hit = r.data.filter((m) => Number(m.id) > afterId).find(pred);
+    if (hit) return hit;
+    await sleep(500);
+  }
+  return null;
+}
+const needMock = () => { if (mode !== "mock") throw new Error("skip"); };
+const needToken = () => { if (!token) throw new Error("Upiši admin token u zaglavlju i klikni „poveži“."); };
+const needWallet = () => { if (!scen.wallet) throw new Error("Prvo pokreni korak 3 (test wallet još ne postoji)."); };
+const pre = (m) => `<div class="msg" style="margin-top:6px"><pre>${esc(m.text)}</pre><div class="meta" style="margin:6px 0 0">${chip(m.channel)}${statusChip(m.status)}</div></div>`;
+
+const STEPS = [
+  { t: "Backend radi", d: "GET /api/health mora da vrati ok:true i mode.", run: async () => {
+      const r = await health();
+      if (!r.ok) return { ok: false, msg: r.error + " — pokreni: cd D:\\desktop\\jar-coin\\backend && npm start" };
+      return { ok: !!r.data.ok, msg: "mode: " + r.data.mode + (r.data.mode === "mock" ? " (test podaci — slobodno se igraj)" : " (pravi lanac — koraci 3–6 isključeni)") };
+    } },
+  { t: "Stanje tegle", d: "GET /api/state — tegla, čisti holderi, grešnici, sledeća isplata.", run: async () => {
+      const r = await loadState();
+      if (!r.ok) return { ok: false, msg: r.error };
+      const s = r.data, miss = ["jarSol", "cleanCount", "sinnersToday", "nextCollection", "day"].filter((k) => s[k] === undefined);
+      if (miss.length) return { ok: false, msg: "fale polja: " + miss.join(", ") };
+      return { ok: true, msg: `tegla ${fmtSol(s.jarSol)} SOL · čistih ${s.cleanCount} · grešnika danas ${s.sinnersToday} · dan ${s.day}` };
+    } },
+  { t: "Simuliraj kupovinu", mock: true, d: "Kupovina nije psovka: test wallet posle kupovine NIJE grešnik.", run: async () => {
+      needMock(); needToken();
+      for (let i = 0; i < 4; i++) {
+        const d = await simulate({ kind: "buy" });
+        const ev = (d.events || []).find((e) => e.kind === "buy") || (d.events || [])[0];
+        if (!ev) return { ok: false, msg: "simulate nije vratio events[]" };
+        const w = await getWallet(ev.wallet);
+        if (w.swore && i < 3) continue; // random holder already swore today; try another
+        scen.wallet = ev.wallet; scen.wallet2 = null; showScen(); $("w-addr").value = ev.wallet;
+        return { ok: !w.swore, html: `test wallet ${addrEl(ev.wallet)} kupio ${fmtTok(ev.tokens)} · swore: <b>${w.swore}</b>` + (w.swore ? ' <span class="err">— kupovina ne sme da pravi grešnika!</span>' : " — dobro, kupovina nije psovka") };
+      }
+      return { ok: false, msg: "nije nađen čist wallet" };
+    } },
+  { t: "Prodaja istog walleta", mock: true, d: "Posle prodaje wallet JESTE grešnik, swearsToday = 1, Agnes je napisala novu poruku.", run: async () => {
+      needMock(); needToken(); needWallet();
+      const before = await outboxMaxId();
+      const d = await simulate({ kind: "sell", wallet: scen.wallet });
+      if (!d.recorded) return { ok: false, msg: "recorded = 0 (prodaja nije zapisana)" };
+      const w = await getWallet(scen.wallet);
+      const m = await waitOutbox(before, (x) => x.text && x.text.includes(short(scen.wallet)));
+      const ok = w.swore === true && w.swearsToday === 1 && !!m;
+      const parts = [`swore: <b>${w.swore}</b>`, `swearsToday: <b>${w.swearsToday}</b>`, m ? '<span class="okc">nova Agnes poruka ✓</span>' : '<span class="err">nema nove poruke u outboxu</span>'];
+      if (w.swearsToday > 1) parts.push('<span class="err">swearsToday > 1 — wallet je već psovao danas; pokreni ponovo od koraka 3</span>');
+      return { ok, html: parts.join(" · ") + (m ? pre(m) : "") };
+    } },
+  { t: "Prodaja opet", mock: true, d: "Druga psovka istog dana: swearsToday = 2 i Agnes kaže „Again…“.", run: async () => {
+      needMock(); needToken(); needWallet();
+      const before = await outboxMaxId();
+      const d = await simulate({ kind: "sell", wallet: scen.wallet });
+      if (!d.recorded) return { ok: false, msg: "recorded = 0" };
+      const w = await getWallet(scen.wallet);
+      const m = await waitOutbox(before, (x) => x.text && x.text.includes(short(scen.wallet)));
+      const again = !!m && /^Again/.test(m.text);
+      return { ok: w.swearsToday === 2 && again, html: `swearsToday: <b>${w.swearsToday}</b> · ` + (m ? (again ? '<span class="okc">„Again“ poruka ✓</span>' : '<span class="err">poruka nije „Again…“</span>') : '<span class="err">nema nove poruke</span>') + (m ? pre(m) : "") };
+    } },
+  { t: "Transfer drugog walleta", mock: true, d: "Prebacivanje tokena na drugi wallet se računa kao psovka.", run: async () => {
+      needMock(); needToken();
+      const before = await outboxMaxId();
+      const d = await simulate({ kind: "transfer" });
+      const ev = (d.events || []).find((e) => e.kind === "transfer") || (d.events || [])[0];
+      if (!ev) return { ok: false, msg: "simulate nije vratio events[]" };
+      if (ev.wallet === scen.wallet) return { ok: false, msg: "nasumično je izabran isti wallet — pokreni ponovo" };
+      scen.wallet2 = ev.wallet; showScen();
+      const w = await getWallet(ev.wallet);
+      const m = await waitOutbox(before, (x) => x.text && x.text.includes(short(ev.wallet)));
+      const tcount = (w.today && w.today.transfer && w.today.transfer.count) || 0;
+      return { ok: w.swore === true && tcount >= 1, html: `${addrEl(ev.wallet)} transfer ${fmtTok(ev.tokens)} · kind: ${kindEl(ev.kind)} · swore: <b>${w.swore}</b> · transfera danas: ${tcount}` + (m ? pre(m) : ' · <span class="mutedc">(poruka nije nađena)</span>') };
+    } },
+  { t: "Probna isplata za danas", d: "POST /admin/collect za današnji UTC dan (dry run). Grešnici nisu na listi, isplaćeno ≤ za podelu, status dry-run.", run: async () => {
+      needToken();
+      const day = todayUTC();
+      const r = await runCollect(day);
+      if (!r.ok) return { ok: false, msg: "/admin/collect: " + r.error };
+      if (r.data.skipped) return { ok: null, msg: "preskočeno: " + r.data.skipped + " (dan je već isplaćen)" };
+      const c = await api("/api/collections/" + day);
+      if (!c.ok) return { ok: false, msg: "/api/collections/" + day + ": " + c.error };
+      const sr = await api("/admin/sinners?day=" + day);
+      const sinners = new Set(sr.ok ? sr.data.map((x) => x.wallet) : []);
+      if (scen.wallet && mode === "mock") sinners.add(scen.wallet);
+      if (scen.wallet2) sinners.add(scen.wallet2);
+      const pays = c.data.payouts || [], col = c.data.collection || {};
+      const leaked = pays.filter((p) => sinners.has(p.wallet));
+      const paidOk = (col.paid_sol ?? r.data.paidSol) <= (col.distributable_sol ?? r.data.distributableSol) + 1e-9;
+      const st = col.status || r.data.status;
+      $("p-day").value = day; loadDay(true); $("p-sum").innerHTML = summaryHtml(r.data); loadHistory();
+      const parts = [
+        `status: ${statusChip(st)}`,
+        `isplata: ${pays.length} walleta, ${fmtSol(col.paid_sol)} / ${fmtSol(col.distributable_sol)} SOL ${paidOk ? '<span class="okc">≤ ✓</span>' : '<span class="err">VIŠE od raspoloživog ✗</span>'}`,
+        `grešnika proveravano: ${sinners.size}` + (sr.ok ? "" : ` <span class="err">(/admin/sinners: ${esc(sr.error)})</span>`),
+        leaked.length ? `<span class="err">grešnici NA LISTI ISPLATE: ${leaked.slice(0, 5).map((p) => addrEl(p.wallet)).join(", ")}</span>` : '<span class="okc">nijedan grešnik nije na listi ✓</span>',
+      ];
+      if (st === "empty") parts.push('<span class="mutedc">(empty = premalo u tegli za podelu)</span>');
+      return { ok: !leaked.length && paidOk && (st === "dry-run" || st === "empty") && sr.ok, html: parts.join("<br>") };
+    } },
+  { t: "Provera walleta", d: "GET /api/wallet za test wallet: opsovao, nema pravo na deo, procena 0. Neispravna adresa vraća 400.", run: async () => {
+      let w = scen.wallet;
+      if (!w) { const f = await api("/api/feed?limit=1"); w = f.ok && f.data[0] ? f.data[0].wallet : null; }
+      if (!w) return { ok: false, msg: "nema walleta za proveru (feed je prazan)" };
+      $("w-addr").value = w;
+      const r = await checkWallet(w);
+      if (!r || !r.ok) return { ok: false, msg: r ? r.error : "greška" };
+      const bad = await api("/api/wallet/nije-adresa");
+      const badOk = bad.status === 400;
+      const d = r.data;
+      if (scen.wallet && w === scen.wallet) {
+        const ok = d.swore === true && d.eligible === false && Number(d.estShareSol) === 0 && badOk;
+        return { ok, html: `swore: <b>${d.swore}</b> · eligible: <b>${d.eligible}</b> · estShareSol: <b>${fmtSol(d.estShareSol)}</b> · loša adresa → ${bad.status} ${badOk ? "✓" : "✗"} · detalji dole u „Provera walleta“` };
+      }
+      return { ok: badOk, html: `wallet iz feeda ${addrEl(w)} učitan · loša adresa → ${bad.status} ${badOk ? "✓" : "✗"} · detalji u „Provera walleta“` };
+    } },
+];
+const stepRes = STEPS.map(() => null);
+function renderSteps() {
+  const ol = $("steps");
+  if (!ol.children.length) {
+    ol.innerHTML = STEPS.map((s, i) => `<li data-i="${i}"><span class="n">${i + 1}</span><div><div class="step-t">${esc(s.t)}</div><div class="step-d">${esc(s.d)}</div></div><div class="step-b"><span class="st"></span><button data-step="${i}">pokreni</button></div><div class="step-r"></div></li>`).join("");
+    ol.querySelectorAll("[data-step]").forEach((b) => { b.onclick = () => runStep(Number(b.dataset.step)); });
+  }
+  STEPS.forEach((s, i) => {
+    const li = ol.children[i], btn = li.querySelector("button"), st = li.querySelector(".st"), rr = li.querySelector(".step-r");
+    const blocked = s.mock && mode === "live";
+    btn.disabled = blocked || stepRes[i] === "run";
+    const r = stepRes[i];
+    if (blocked) { st.className = "st na"; st.textContent = "—"; rr.innerHTML = '<span class="mutedc">Isključeno u LIVE modu: simulacija bi upisala lažne psovke u pravi ledger. Ovaj korak testiraj u MOCK modu (MODE=mock).</span>'; return; }
+    if (r === "run") { st.className = "st run"; st.textContent = "…"; return; }
+    if (!r) { st.className = "st"; st.textContent = ""; rr.innerHTML = ""; return; }
+    st.className = "st " + (r.ok === true ? "ok" : r.ok === false ? "bad" : "na");
+    st.textContent = r.ok === true ? "✓" : r.ok === false ? "✗" : "—";
+    rr.innerHTML = r.html || `<span class="${r.ok === false ? "err" : "mutedc"}">${esc(r.msg || "")}</span>`;
+  });
+}
+async function runStep(i) {
+  stepRes[i] = "run"; renderSteps();
+  let r;
+  try { r = await STEPS[i].run(); }
+  catch (e) { r = e.message === "skip" ? { ok: null, msg: "Samo u MOCK modu." } : { ok: false, msg: e.message }; }
+  stepRes[i] = r; renderSteps();
+  loadFeed(); loadState(); if (token) loadOutbox();
+  return r;
+}
+$("run-all").onclick = async () => {
+  $("run-all").disabled = true;
+  for (let i = 0; i < STEPS.length; i++) {
+    if (STEPS[i].mock && mode === "live") continue;
+    const r = await runStep(i);
+    if (i === 0 && r.ok === false) break;
+  }
+  $("run-all").disabled = false;
+};
+
+// ---------- boot ----------
+renderSteps();
+(async () => {
+  await health();
+  loadState(); loadFeed(); loadHistory(); loadDay();
+  if (token) { await loadConfig(); loadOutbox(); loadPreflight(); }
+  else { renderMode(); loadOutbox(); loadPreflight(); }
+})();
+setInterval(async () => {
+  if (document.hidden) return;
+  const h = await health();
+  if (h.ok) { loadState(); loadFeed(); }
+}, 5000);
+setInterval(() => { if (!document.hidden && token && backendUp && authState !== false) loadOutbox(); }, 10000);
+</script>
+</body>
+</html>

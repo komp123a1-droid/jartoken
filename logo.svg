@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <rect width="256" height="256" rx="40" fill="#1f2a44"/>
+  <!-- tiles -->
+  <g stroke="#2c3a5c" stroke-width="2">
+    <line x1="0" y1="64" x2="256" y2="64"/><line x1="0" y1="128" x2="256" y2="128"/><line x1="0" y1="192" x2="256" y2="192"/>
+    <line x1="64" y1="0" x2="64" y2="256"/><line x1="128" y1="0" x2="128" y2="256"/><line x1="192" y1="0" x2="192" y2="256"/>
+  </g>
+  <!-- falling coin -->
+  <g transform="rotate(-18 176 40)">
+    <ellipse cx="176" cy="40" rx="17" ry="11" fill="#d9a23a" stroke="#8a5f14" stroke-width="3"/>
+    <text x="176" y="45" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="13" fill="#8a5f14">3%</text>
+  </g>
+  <!-- lid -->
+  <rect x="70" y="58" width="116" height="22" rx="5" fill="#b3342c"/>
+  <rect x="70" y="58" width="116" height="7" rx="3" fill="#d4544a"/>
+  <rect x="112" y="64" width="32" height="5" rx="2" fill="#1f2a44"/>
+  <!-- jar body -->
+  <path d="M78 80 H178 Q196 92 196 118 V200 Q196 222 174 222 H82 Q60 222 60 200 V118 Q60 92 78 80 Z" fill="#dff0ec" fill-opacity=".35" stroke="#f3ead8" stroke-width="5"/>
+  <!-- coins inside -->
+  <path d="M64 170 Q128 150 192 168 V200 Q192 218 174 218 H82 Q64 218 64 200 Z" fill="#d9a23a"/>
+  <g fill="#f0c45c" stroke="#8a5f14" stroke-width="2">
+    <ellipse cx="92" cy="170" rx="14" ry="6"/><ellipse cx="126" cy="162" rx="14" ry="6"/><ellipse cx="160" cy="168" rx="14" ry="6"/>
+    <ellipse cx="108" cy="190" rx="14" ry="6"/><ellipse cx="146" cy="192" rx="14" ry="6"/>
+  </g>
+  <!-- masking tape label -->
+  <g transform="rotate(-5 128 122)">
+    <path d="M70 104 L186 104 L184 110 L188 116 L185 122 L188 128 L186 138 L70 138 L73 131 L69 124 L72 117 L69 110 Z" fill="#efe2b8"/>
+    <text x="128" y="131" text-anchor="middle" font-family="'Comic Sans MS', 'Marker Felt', cursive" font-weight="bold" font-size="28" fill="#1f2a44">$JAR</text>
+  </g>
+  <!-- shine -->
+  <path d="M74 110 Q72 150 76 196" stroke="#ffffff" stroke-opacity=".6" stroke-width="6" fill="none" stroke-linecap="round"/>
+</svg>

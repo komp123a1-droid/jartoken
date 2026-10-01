@@ -1,0 +1,1205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>the swear jar — $JAR</title>
+<link rel="icon" href="../logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Lato:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wall:#f3ead8; --tile:#e4efe9; --grout:#c9dbd3; --navy:#1f2a44; --gold:#d9a23a; --gold2:#f0c45c; --bronze:#8a5f14;
+    --red:#b3342c; --wood:#a86f40; --wood2:#8a5530; --tape:#efe2b8; --cab:#6f8f86; --cab2:#5b7a71; --paper:#fffdf6; --ink:#27304a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    font:15px/1.5 Lato, "Segoe UI", Arial, sans-serif; color:var(--ink); overflow-x:hidden;
+    background:var(--wall);
+  }
+  .hand{font-family:"Caveat Brush", "Comic Sans MS", cursive}
+  .kitchen{position:relative;min-height:100vh;display:grid;grid-template-rows:auto 1fr auto;overflow:hidden}
+
+  /* ---------- upper cabinets (navigation) ---------- */
+  .cabinets{position:relative;z-index:6;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 16px;background:var(--cab2);box-shadow:0 10px 0 rgba(0,0,0,.12);perspective:900px}
+  .cab{position:relative;height:clamp(110px,19vh,170px);background:#3a4e48;border-bottom:6px solid #4c665e}
+  .door{position:absolute;inset:8px 6px 6px;background:linear-gradient(160deg,var(--cab),var(--cab2));border:3px solid #4c665e;border-radius:4px;cursor:pointer;
+    transform-origin:left center;transition:transform .55s cubic-bezier(.3,.8,.3,1);box-shadow:inset 0 0 0 10px rgba(255,255,255,.06), 0 3px 0 rgba(0,0,0,.15);
+    display:flex;align-items:center;justify-content:center;color:inherit;font:inherit;padding:0}
+  .cab:nth-child(even) .door{transform-origin:right center}
+  .door::after{content:"";position:absolute;top:50%;width:6px;height:26px;border-radius:3px;background:#c7b28a;box-shadow:0 1px 0 #6b5a3a;right:12px;transform:translateY(-50%)}
+  .cab:nth-child(even) .door::after{right:auto;left:12px}
+  .door:focus-visible{outline:3px dashed var(--gold);outline-offset:3px}
+  .door .tape{background:var(--tape);padding:3px 12px;font-size:clamp(15px,2.3vw,24px);color:var(--navy);transform:rotate(-4deg);box-shadow:0 1px 2px rgba(0,0,0,.2);
+    clip-path:polygon(3% 0,97% 4%,100% 50%,97% 100%,2% 96%,0 50%)}
+  .cab:nth-child(2) .tape{transform:rotate(3deg)} .cab:nth-child(3) .tape{transform:rotate(-2deg)} .cab:nth-child(4) .tape{transform:rotate(5deg)}
+  .cab.open .door{transform:rotateY(-105deg)}
+  .cab.open:nth-child(even) .door{transform:rotateY(105deg)}
+  .cab .shelf{position:absolute;inset:8px 6px 6px;background:#2d3d38;border-radius:3px;display:flex;align-items:flex-end;justify-content:center;
+    color:#cfe0d9;font-size:12px;padding-bottom:6px;box-shadow:inset 0 -12px 0 #3e524c}
+
+  /* inside of an open cabinet: a paper card pulled down onto the wall */
+  .inside{position:absolute;z-index:5;top:clamp(116px,19.5vh,176px);left:50%;width:min(620px,calc(100vw - 32px));transform:translate(-50%,-30px) rotate(-1deg);
+    opacity:0;pointer-events:none;transition:.35s ease;background:var(--paper);padding:22px 22px 18px;
+    background-image:repeating-linear-gradient(transparent 0 27px,#d6e3ef 27px 28px);box-shadow:0 18px 30px rgba(0,0,0,.25);border-left:3px solid #e9a0a0;max-height:calc(100vh - 200px);overflow:auto}
+  .inside.show{opacity:1;pointer-events:auto;transform:translate(-50%,0) rotate(-1deg)}
+  .inside::before{content:"";position:absolute;top:-10px;left:40%;width:110px;height:24px;background:var(--tape);opacity:.9;transform:rotate(3deg)}
+  .inside h2{font:32px/1 "Caveat Brush",cursive;margin:0 0 10px;color:var(--navy)}
+  .inside p{margin:0 0 10px}
+  .inside ol{margin:0 0 10px;padding-left:22px} .inside li{margin-bottom:4px}
+  .inside .sig{font:22px "Caveat Brush",cursive;color:var(--red);text-align:right;margin:4px 0 0}
+  .inside .shut{position:absolute;top:8px;right:10px;border:0;background:none;font:20px "Caveat Brush",cursive;color:var(--red);cursor:pointer}
+  .fine{font-size:12px;color:#6b6f7c}
+  .demo{font-size:11px;background:#fde6c4;color:#7a4a08;padding:1px 6px;border-radius:2px;letter-spacing:.04em;vertical-align:middle;font-weight:700}
+
+  /* confession box */
+  .booth{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+  .booth input{flex:1 1 220px;min-width:0;font:14px "Lato",sans-serif;padding:10px;border:2px solid var(--navy);background:#fff;border-radius:2px}
+  .btn{font:20px/1 "Caveat Brush",cursive;background:var(--navy);color:var(--wall);border:0;padding:10px 16px;cursor:pointer;border-radius:2px;box-shadow:0 3px 0 #0e1424}
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 #0e1424}
+  .btn.red{background:var(--red);box-shadow:0 3px 0 #6d1b16}
+  .report{display:none;border:2px solid var(--navy);background:#fff;padding:14px;position:relative;transform:rotate(.6deg)}
+  .report.show{display:block}
+  .report .grade{position:absolute;right:14px;top:8px;font:46px/1 "Caveat Brush",cursive;color:var(--red);transform:rotate(-8deg)}
+  .report table{border-collapse:collapse;width:100%;font-size:14px;margin-top:6px}
+  .report td{border-bottom:1px dotted #9aa;padding:3px 0}
+  .report td:last-child{text-align:right;font-weight:700}
+
+  /* blessing: three little jars */
+  .splits{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 12px}
+  .mini{text-align:center}
+  .mini .mj{height:74px;margin:0 auto 4px;width:62px;border:3px solid var(--navy);border-top-width:9px;border-radius:8px 8px 14px 14px;position:relative;overflow:hidden;background:rgba(223,240,236,.5)}
+  .mini .mj i{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(var(--gold2),var(--gold));transition:height 1s ease}
+  .mini b{display:block;font:20px/1 "Caveat Brush",cursive}
+  .mini span{font-size:12px}
+  .recipe td{padding:4px 8px 4px 0;vertical-align:top;border-bottom:1px dotted #b9c3cc}
+  .recipe td:first-child{font:19px "Caveat Brush",cursive;white-space:nowrap;color:var(--navy)}
+  .recipe{border-collapse:collapse;width:100%;font-size:14px}
+
+  /* ---------- backsplash ---------- */
+  .splash{position:relative;background-color:var(--tile);
+    background-image:linear-gradient(var(--grout) 2px,transparent 2px),linear-gradient(90deg,var(--grout) 2px,transparent 2px);background-size:56px 56px;
+    display:flex;align-items:flex-end;justify-content:center;padding:18px 16px 0;min-height:clamp(330px,52vh,560px)}
+  .note{position:absolute;left:clamp(12px,4vw,60px);top:24px;width:min(250px,44vw);background:var(--paper);padding:14px 14px 10px;transform:rotate(-3deg);box-shadow:0 6px 12px rgba(0,0,0,.15);font-size:13.5px;z-index:2}
+  .note::before{content:"";position:absolute;top:-9px;left:30%;width:80px;height:20px;background:var(--tape);opacity:.9;transform:rotate(-6deg)}
+  .note h1{font:28px/1 "Caveat Brush",cursive;margin:0 0 6px;color:var(--navy)}
+  .note p{margin:0 0 6px}
+  .note .sig{font:20px "Caveat Brush",cursive;color:var(--red);text-align:right;margin:0}
+  .ruler{position:absolute;right:clamp(14px,5vw,80px);top:20px;width:30px;height:clamp(180px,34vh,300px);background:linear-gradient(90deg,#e7c77f,#d9b264);border:2px solid #9c7a33;transform:rotate(8deg);z-index:1;
+    background-image:repeating-linear-gradient(#6b5320 0 2px,transparent 2px 14px),linear-gradient(90deg,#e7c77f,#d9b264);background-size:10px 100%,100% 100%;background-repeat:no-repeat;cursor:pointer}
+  .ruler::after{content:"12 IN · FOR KNUCKLES";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(90deg);font:10px Lato,sans-serif;letter-spacing:.15em;white-space:nowrap;color:#5b4618;font-weight:900}
+  .ruler.tap{animation:tap .4s ease}
+  @keyframes tap{0%,100%{transform:rotate(8deg)}40%{transform:rotate(-14deg)}}
+  .hook{position:absolute;right:calc(clamp(14px,5vw,80px) + 8px);top:10px;width:14px;height:14px;border-radius:50%;background:#8b8f96;z-index:2}
+
+  /* speech from Sister Agnes */
+  .agnes{position:absolute;right:clamp(12px,4vw,70px);top:clamp(200px,40vh,340px);width:min(260px,52vw);background:var(--navy);color:var(--wall);padding:12px 14px;border-radius:4px;z-index:4;
+    font-size:14px;opacity:0;transform:translateY(8px);transition:.3s;box-shadow:0 8px 16px rgba(0,0,0,.2)}
+  .agnes.show{opacity:1;transform:none}
+  .agnes::after{content:"";position:absolute;left:24px;bottom:-10px;border:10px solid transparent;border-top-color:var(--navy);border-bottom:0}
+  .agnes small{display:block;font:17px "Caveat Brush",cursive;color:var(--gold2);margin-top:4px}
+
+  /* ---------- the jar ---------- */
+  .jarwrap{position:relative;width:clamp(210px,30vw,320px);z-index:3;margin-bottom:-6px}
+  .lid{position:relative;height:38px;margin:0 9%;background:linear-gradient(var(--red),#8e2520);border-radius:8px 8px 3px 3px;box-shadow:inset 0 5px 0 rgba(255,255,255,.18)}
+  .lid .slot{position:absolute;left:50%;top:9px;width:34%;height:8px;background:#1c1414;border-radius:3px;transform:translateX(-50%)}
+  .lid .ca{position:absolute;left:50%;bottom:-13px;transform:translateX(-50%) rotate(-2deg);white-space:nowrap;background:var(--tape);font:16px "Caveat Brush",cursive;color:var(--navy);padding:0 10px;z-index:2}
+  .glass{position:relative;height:clamp(250px,36vw,380px);border:5px solid rgba(255,255,255,.9);border-top-width:4px;border-radius:26px 26px 44px 44px;
+    background:linear-gradient(90deg,rgba(255,255,255,.35),rgba(223,240,236,.18) 30%,rgba(223,240,236,.1) 70%,rgba(255,255,255,.3));overflow:hidden;
+    box-shadow:inset 0 0 0 2px rgba(80,120,110,.25), 0 12px 18px -8px rgba(0,0,0,.3)}
+  .glass::before{content:"";position:absolute;left:10%;top:8%;width:8%;height:70%;border-radius:20px;background:rgba(255,255,255,.55);z-index:3}
+  .pile{position:absolute;inset:0;z-index:1}
+  .pile .c{position:absolute;width:40px;height:15px;border-radius:50%;background:radial-gradient(ellipse at 40% 35%,#ffe08a,var(--gold) 60%,var(--bronze));border:1.5px solid var(--bronze)}
+  .pile .c.buy{background:radial-gradient(ellipse at 40% 35%,#f4f1ea,#c7c2b6 60%,#7f7a70);border-color:#7f7a70}
+  .label{position:absolute;left:50%;top:22%;transform:translateX(-50%) rotate(-3deg);background:var(--tape);width:78%;text-align:center;padding:8px 6px 4px;z-index:4;
+    clip-path:polygon(0 4%,100% 0,98% 50%,100% 100%,1% 96%,3% 50%);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+  .label b{display:block;font:clamp(28px,4vw,42px)/.9 "Caveat Brush",cursive;color:var(--navy)}
+  .label span{font:clamp(14px,1.6vw,18px) "Caveat Brush",cursive;color:var(--red)}
+  .level{position:absolute;left:50%;top:48%;transform:translateX(-50%) rotate(2deg);background:#fff;padding:2px 10px;z-index:4;font:15px "Caveat Brush",cursive;white-space:nowrap;border:1px dashed #9aa}
+  .strips{position:absolute;inset:0;z-index:5;pointer-events:none}
+  .strip{position:absolute;background:var(--tape);font:14px/1.1 "Caveat Brush",cursive;color:var(--red);padding:3px 8px;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.15);animation:stick .3s ease}
+  @keyframes stick{from{transform:scale(1.4) rotate(var(--r));opacity:0}to{transform:scale(1) rotate(var(--r));opacity:1}}
+  .falling{position:absolute;z-index:7;width:40px;height:15px;border-radius:50%;background:radial-gradient(ellipse at 40% 35%,#ffe08a,var(--gold) 60%,var(--bronze));border:1.5px solid var(--bronze);left:50%;top:-36px;margin-left:-20px;
+    transition:transform .8s cubic-bezier(.5,0,1,1), opacity .2s .75s}
+  .falling.buy{background:radial-gradient(ellipse at 40% 35%,#f4f1ea,#c7c2b6 60%,#7f7a70);border-color:#7f7a70}
+
+  /* ---------- counter ---------- */
+  .counter{position:relative;z-index:4;background:linear-gradient(var(--wood),var(--wood2));border-top:10px solid #c48a57;padding:16px 16px 22px;
+    display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px 22px;box-shadow:inset 0 10px 18px rgba(0,0,0,.15)}
+  .counter::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 90px,rgba(0,0,0,.05) 90px 92px);pointer-events:none}
+  .ledger{position:relative;background:var(--paper);padding:10px 14px 8px 44px;box-shadow:0 6px 10px rgba(0,0,0,.25);transform:rotate(-.6deg);
+    background-image:linear-gradient(90deg,transparent 34px,#e9a0a0 34px 36px,transparent 36px),repeating-linear-gradient(transparent 0 23px,#d6e3ef 23px 24px)}
+  .ledger h3{margin:0;font:22px/1.1 "Caveat Brush",cursive;color:var(--navy);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  .ledger ul{list-style:none;margin:4px 0 0;padding:0;height:168px;overflow:hidden;font:13px/24px Lato,sans-serif}
+  .ledger li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:ink .4s ease}
+  .ledger li.sell{color:var(--red);font-weight:700}
+  .ledger li.sell::after{content:"  ✗";}
+  @keyframes ink{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+  .tray{position:relative;display:flex;flex-direction:column;gap:10px;justify-content:center}
+  .tray .card{background:var(--paper);padding:10px 12px;box-shadow:0 5px 8px rgba(0,0,0,.22);transform:rotate(1deg);font-size:13px}
+  .tray .card b{font:21px/1 "Caveat Brush",cursive;color:var(--navy)}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .row .btn{flex:1 1 120px}
+  .tray .coinbtn{background:var(--gold);color:var(--navy);box-shadow:0 3px 0 var(--bronze)}
+  .tray .coinbtn.silver{background:#d8d4ca;box-shadow:0 3px 0 #7f7a70}
+
+  @media (max-width:720px){
+    .cabinets{padding:0 8px;gap:4px}
+    .door .tape{padding:2px 6px}
+    .splash{flex-direction:column;align-items:center;justify-content:flex-end;padding-top:14px}
+    .note{position:relative;left:auto;top:auto;width:100%;max-width:420px;margin:6px 0 60px;transform:rotate(-1.5deg)}
+    .ruler{top:auto;bottom:110px;right:10px;height:150px}
+    .hook{display:none}
+    .agnes{top:auto;bottom:calc(clamp(250px,36vw,380px) + 30px);right:16px;left:16px;width:auto}
+    .jarwrap{width:min(250px,68vw)}
+    .glass{height:280px}
+    .counter{grid-template-columns:1fr}
+    .inside{top:clamp(116px,19.5vh,176px)}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style id="addon-polish">
+  /* readability: Caveat Brush only for titles/labels/signatures/big numbers; Lato for reading */
+  .inside p, .inside li, .inside td{font-family:Lato,"Segoe UI",Arial,sans-serif;font-size:15px;line-height:1.55}
+  .inside .sig, .inside .shut, .inside h2, .recipe td:first-child, .report .grade, .inside .hand{font-family:"Caveat Brush","Comic Sans MS",cursive}
+  .recipe td:first-child{font-size:19px}
+  .inside .sig{font-size:22px} .report .grade{font-size:46px}
+  .recipe, .report table{font-size:15px}
+  .fine, .inside p.fine{font-family:Lato,"Segoe UI",Arial,sans-serif;font-size:13px;line-height:1.5;color:#474c59}   /* ~8:1 on paper */
+  .demo{font-family:Lato,"Segoe UI",Arial,sans-serif;font-size:12px;color:#6b3f05}
+  .mini span{font-size:13px;line-height:1.35;color:#3b4256}
+  .booth input{font-size:15px}
+  .agnes{font-size:15px;line-height:1.45}
+
+  /* ledger: larger lines, sells marked clearly */
+  .ledger{padding:12px 14px 10px 46px;
+    background-image:linear-gradient(90deg,transparent 34px,#e9a0a0 34px 36px,transparent 36px),repeating-linear-gradient(transparent 0 29px,#d6e3ef 29px 30px)}
+  .ledger ul{font:15px/30px Lato,"Segoe UI",Arial,sans-serif;height:210px;color:var(--ink)}
+  .ledger li{position:relative;padding-left:2px}
+  .ledger li.sell{color:#9e2a23;font-weight:700;background:rgba(179,52,44,.08)}
+  .ledger li.sell::before{content:"SWEAR";display:inline-block;font:900 10px/1 Lato,sans-serif;letter-spacing:.08em;color:#fff;background:var(--red);padding:3px 5px;border-radius:2px;margin-right:6px;vertical-align:2px}
+  .ledger li.sell::after{content:""}
+  .counter{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+  .ledger,.tray{min-width:0}
+  @media (max-width:720px){.counter{grid-template-columns:minmax(0,1fr)}}
+  .ledger li.buy::before{content:"grace";display:inline-block;font:700 10px/1 Lato,sans-serif;letter-spacing:.08em;color:#3b4256;border:1px solid #9aa3b5;padding:2px 5px;border-radius:2px;margin-right:6px;vertical-align:2px}
+
+  /* counter tray */
+  .tray .card{font-size:15px;line-height:1.5}
+  .tray-result{margin:0;background:var(--paper);padding:8px 12px;font:700 15px/1.45 Lato,"Segoe UI",Arial,sans-serif;box-shadow:0 4px 7px rgba(0,0,0,.2);transform:rotate(-.5deg);border-left:5px solid #7f7a70;color:var(--ink)}
+  .tray-result.sell{border-left-color:var(--red);color:#9e2a23}
+  .tray-result.buy{border-left-color:#3f7a5e;color:#2d5a45}
+  @media (max-width:720px){ .ledger ul{height:180px} }
+</style>
+<style id="addon-tools">
+  .addon-calc,.addon-cert{margin-top:14px;padding-top:12px;border-top:2px dashed #c9b98f}
+  .addon-calc h3,.addon-cert h3{font-size:24px;line-height:1.05;margin:0 0 4px;color:var(--navy);font-weight:400}
+  .addon-calc .fine,.addon-cert .fine{margin:0 0 8px}
+  .calc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:6px 0 10px}
+  .calc-grid label{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:700;color:var(--navy);letter-spacing:.02em}
+  .addon-calc input,.addon-cert input{width:100%;min-width:0;font:14px Lato,sans-serif;padding:8px 9px;border:2px solid var(--navy);background:#fff;border-radius:2px;color:var(--ink)}
+  .addon-calc input:focus-visible,.addon-cert input:focus-visible{outline:3px dashed var(--gold);outline-offset:1px}
+  .calc-out{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:6px}
+  .calc-out div{background:#fff;border:2px solid var(--navy);padding:6px 10px;transform:rotate(-.4deg)}
+  .calc-out div+div{transform:rotate(.5deg)}
+  .calc-out span{display:block;font-size:12px;color:#6b6f7c}
+  .calc-out b{font:26px/1.1 "Caveat Brush",cursive;color:var(--navy);font-weight:400;word-break:break-word}
+  .calc-msg,.cert-msg{font-size:19px;line-height:1.2;color:var(--red);margin:4px 0 6px;min-height:1.2em}
+  .calc-formula{font-family:Consolas,"Courier New",monospace;word-break:break-word}
+  .cert-form{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 4px}
+  .cert-form input{flex:1 1 180px}
+  .cert-form .btn{flex:0 0 auto}
+  .cert-prev canvas{display:block;width:100%;height:auto;margin:6px 0 10px;box-shadow:0 6px 12px rgba(0,0,0,.2);background:#fbf5e4}
+  .cert-prev .row .btn{text-align:center;text-decoration:none}
+  @media (max-width:520px){
+    .calc-grid{grid-template-columns:1fr}
+    .calc-out{grid-template-columns:1fr}
+    .cert-form .btn{flex:1 1 100%}
+  }
+</style>
+<style id="addon-nav">
+  /* ---- doors: tape joke + plain subtitle, obviously clickable ---- */
+  .door{flex-direction:column;gap:7px;transition:transform .55s cubic-bezier(.3,.8,.3,1), filter .2s}
+  .door .sub{font:700 11.5px/1.2 Lato,"Segoe UI",Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#f6faf8;background:rgba(31,42,68,.42);
+    padding:3px 8px;border-radius:2px;max-width:calc(100% - 36px);text-align:center}
+  .door::before{content:"open ›";position:absolute;bottom:5px;left:50%;transform:translateX(-50%);font:900 10px/1 Lato,sans-serif;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--gold2);opacity:0;transition:opacity .2s;pointer-events:none}
+  .cab:not(.open) .door:hover, .cab:not(.open) .door:focus-visible{transform:translateY(-3px) rotateY(-9deg);filter:brightness(1.08)}
+  .cab:not(.open):nth-child(even) .door:hover, .cab:not(.open):nth-child(even) .door:focus-visible{transform:translateY(-3px) rotateY(9deg)}
+  .cab:not(.open) .door:hover::before, .cab:not(.open) .door:focus-visible::before{opacity:1}
+  .cab.open .door::before{content:none}
+  @media (hover:none){ .door::before{content:none} }
+  /* first visit: the first door peeks open a little */
+  .cabinets.nudge .cab:first-child:not(.open) .door{animation:doorpeek 3.4s ease-in-out 1.4s infinite}
+  @keyframes doorpeek{0%,70%,100%{transform:none}80%{transform:rotateY(-16deg)}90%{transform:rotateY(-4deg)}}
+
+  /* ---- CA rail under the cabinets ---- */
+  .cabar{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:6px 10px;padding:7px 2px 9px;
+    font:13px/1.3 Lato,"Segoe UI",Arial,sans-serif;color:#eef5f1;border-top:2px solid #4c665e}
+  .cab-hint{margin-right:auto;font-size:20px;line-height:1;color:var(--gold2);animation:hintbob 1.6s ease-in-out infinite}
+  .cab-hint[hidden]{display:none}
+  @keyframes hintbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  .ca-tape{background:var(--tape);color:var(--navy);padding:3px 12px;transform:rotate(-1deg);box-shadow:0 1px 2px rgba(0,0,0,.25);
+    clip-path:polygon(2% 0,98% 6%,100% 50%,98% 100%,1% 94%,0 50%);display:inline-flex;align-items:baseline;gap:6px;max-width:100%}
+  .ca-tape b{font-size:19px;font-weight:400;line-height:1}
+  #caText{font:700 13px/1.2 Consolas,"Courier New",monospace;word-break:break-all}
+  .ca-copy{font:700 12px/1 Lato,sans-serif;letter-spacing:.08em;text-transform:uppercase;background:var(--navy);color:var(--wall);border:0;border-radius:2px;
+    padding:7px 11px;cursor:pointer;box-shadow:0 2px 0 #0e1424}
+  .ca-copy:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+  .ca-copy:focus-visible, .ca-links a:focus-visible{outline:3px dashed var(--gold);outline-offset:2px}
+  .ca-msg{font-size:18px;line-height:1;color:var(--gold2);min-width:0}
+  .ca-msg:empty{display:none}
+  .ca-links{display:inline-flex;gap:12px;align-items:center}
+  .ca-links a{color:#fff7dc;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+  .ca-links a:hover{color:var(--gold2)}
+  .ca-links a.off{opacity:.55;cursor:not-allowed;text-decoration:line-through}
+
+  /* ---- open panel: desktop card ---- */
+  .inside{top:calc(clamp(116px,19.5vh,176px) + 46px);max-height:calc(100vh - 250px)}
+  .inside:focus{outline:none}
+  .inside{visibility:hidden;transition:opacity .35s ease,transform .35s ease,visibility 0s linear .35s} .inside.show{visibility:visible;transition-delay:0s}   /* closed panels drop out of the tab order; visible at once on open so focus() lands */
+  .inside .shut{position:sticky;top:0;z-index:3;display:block;width:max-content;margin:-12px -10px 6px auto;padding:8px 14px;border:0;cursor:pointer;
+    background:var(--tape);color:var(--red);font:22px/1 "Caveat Brush","Comic Sans MS",cursive;box-shadow:0 2px 4px rgba(0,0,0,.2);transform:rotate(1.5deg)}
+  .inside .shut:hover{background:#f6ebc6}
+  .inside .shut:focus-visible{outline:3px dashed var(--gold);outline-offset:2px}
+  /* scroll affordance: fade + hint at the bottom while more content is below */
+  .inside.more::after{content:"more below ↓";position:sticky;bottom:0;display:block;height:46px;margin:-46px -22px 0;padding-top:24px;text-align:center;
+    background:linear-gradient(rgba(255,253,246,0),var(--paper) 65%);font:17px/1 "Caveat Brush","Comic Sans MS",cursive;color:var(--navy);pointer-events:none;z-index:2}
+
+  @media (max-width:720px){
+    .cabar{justify-content:center;padding:6px 0 8px}
+    .cab-hint{flex-basis:100%;text-align:center;margin-right:0}
+    /* open panel = full-screen sheet */
+    .inside{position:fixed;inset:0;top:0;left:0;width:100%;max-height:none;z-index:60;padding:0 18px 28px;border-left:0;
+      transform:translateY(28px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+    .inside.show{transform:none}
+    .inside::before{display:none}
+    .inside .shut{width:calc(100% + 36px);margin:0 -18px 14px;padding:14px 18px;padding-top:calc(14px + env(safe-area-inset-top,0px));
+      background:var(--navy);color:var(--wall);font-size:24px;text-align:center;transform:none;box-shadow:0 3px 8px rgba(0,0,0,.25)}
+    .inside .shut:hover{background:var(--navy)}
+    .inside.more::after{margin:-46px -18px 0}
+    html.jar-lock, html.jar-lock body{overflow:hidden}
+  }
+  @media (max-width:560px){
+    .cabinets{grid-template-columns:repeat(2,1fr)}
+    .cab{height:96px}
+    .door{gap:5px}
+    .door .tape{font-size:19px}
+    .door .sub{font-size:11px;max-width:calc(100% - 30px)}
+  }
+</style>
+<style id="addon-hero">
+  /* hero: headline + 3-step flywheel (left), countdown + live stats (on top of the jar) */
+  .splash{min-height:clamp(480px,64vh,660px)}
+  .kitchen{grid-template-columns:minmax(0,1fr)} /* stop nowrap ledger lines from widening the whole page on phones */
+  .hx-col{position:absolute;left:clamp(12px,3.5vw,60px);top:20px;width:min(300px,calc(35vw - 40px));z-index:2;display:flex;flex-direction:column;gap:10px}
+  .hx-col .note{position:relative;left:auto;top:auto;width:auto;max-width:none;margin:0;padding:12px 16px 8px}
+  .note .hx-kick{font:900 11px/1.2 Lato,"Segoe UI",Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin:0 0 6px}
+  .note h1.hx-head{font:clamp(21px,1.85vw,27px)/1.08 "Caveat Brush","Comic Sans MS",cursive;color:var(--navy);margin:0 0 2px}
+  .hx-head .hx-tk{color:var(--red)}
+  .hx-head .hx-sol{background:linear-gradient(transparent 58%,var(--gold2) 58% 92%,transparent 92%);padding:0 2px}
+  .hx-flow{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+  .hx-card{position:relative;display:flex;gap:10px;align-items:center;background:var(--paper);padding:8px 10px 8px 9px;border-left:4px solid var(--gold);
+    box-shadow:0 3px 6px rgba(0,0,0,.15);font:700 13.5px/1.3 Lato,"Segoe UI",Arial,sans-serif;color:var(--ink);transform:rotate(-1deg)}
+  .hx-card:nth-child(2){transform:rotate(.8deg);margin-left:10px;border-left-color:var(--red)}
+  .hx-card:nth-child(3){transform:rotate(-.5deg);margin-left:4px;border-left-color:#3f7a5e}
+  .hx-card::before{content:"";position:absolute;top:-7px;right:18px;width:44px;height:14px;background:var(--tape);opacity:.9;transform:rotate(5deg)}
+  .hx-card svg{flex:0 0 30px;width:30px;height:30px;color:var(--navy)}
+  .hx-card b{font:24px/1 "Caveat Brush","Comic Sans MS",cursive;color:var(--red);margin-right:3px;vertical-align:-2px}
+  .hx-card i{font-style:normal;color:var(--red);font-weight:900}
+
+  .hx-meter{position:relative;z-index:4;margin:0 1% 12px;text-align:center}
+  .hx-timer{display:flex;flex-direction:column;align-items:center;background:var(--navy);color:var(--wall);border-radius:8px;padding:5px 10px 7px;box-shadow:0 4px 0 #0e1424, 0 8px 14px rgba(0,0,0,.18)}
+  .hx-tl{font:900 10.5px/1.2 Lato,"Segoe UI",Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--gold2)}
+  #hxClock{font:900 clamp(28px,3vw,40px)/1.05 Lato,"Segoe UI",Arial,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.04em}
+  .hx-stats{list-style:none;margin:9px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .hx-stats li{background:var(--tape);padding:4px 3px 3px;box-shadow:0 1px 2px rgba(0,0,0,.2);transform:rotate(-2deg);
+    clip-path:polygon(2% 0,98% 3%,100% 50%,98% 100%,1% 97%,0 50%)}
+  .hx-stats li:nth-child(2){transform:rotate(1.5deg)} .hx-stats li:nth-child(3){transform:rotate(-1deg)}
+  .hx-stats b{display:block;font:900 17px/1.15 Lato,"Segoe UI",Arial,sans-serif;font-variant-numeric:tabular-nums;color:var(--navy);white-space:nowrap}
+  .hx-stats span{display:block;font:700 10.5px/1.2 Lato,"Segoe UI",Arial,sans-serif;color:#3b4256}
+  .hx-stats em{font-style:normal;color:#7a4a08}
+  .hx-stats .hx-bad b{color:var(--red)}
+  .hx-stats li.hx-bump b{animation:hxBump .45s ease}
+  @keyframes hxBump{40%{transform:scale(1.25)}}
+  #level{display:none} /* replaced by the "SOL in the jar" stat above the lid */
+
+  @media (max-width:720px){
+    .hx-col{position:relative;left:auto;top:auto;width:100%;max-width:440px;margin:6px 0 124px}
+    .hx-col .note{transform:rotate(-1.2deg)}
+    .note h1.hx-head{font-size:26px}
+    .hx-flow{gap:8px}
+    .hx-card{font-size:14px}
+    .agnes{bottom:calc(var(--hx-jarh,450px) + 12px)}
+    .hx-meter{margin:0 -4% 12px}
+    #hxClock{font-size:32px}
+  }
+</style>
+</head>
+<body>
+<div class="kitchen">
+
+  <!-- upper cabinets = navigation -->
+  <nav class="cabinets" aria-label="Kitchen cabinets">
+    <div class="cab" data-panel="rules"><div class="shelf">tea · sugar · rules</div><button class="door" aria-label="House rules: how it works"><span class="tape hand">house rules</span><span class="sub">how it works</span></button></div>
+    <div class="cab" data-panel="confess"><div class="shelf">a small stool</div><button class="door" aria-label="Confession: check your wallet"><span class="tape hand">confession</span><span class="sub">check your wallet</span></button></div>
+    <div class="cab" data-panel="bless"><div class="shelf">three small jars</div><button class="door" aria-label="Collection: payouts"><span class="tape hand">collection</span><span class="sub">payouts</span></button></div>
+    <div class="cab" data-panel="recipe"><div class="shelf">flour · recipe tin</div><button class="door" aria-label="Recipe tin: tokenomics and CA"><span class="tape hand">recipe tin</span><span class="sub">tokenomics · CA</span></button></div>
+    <div class="cabar" id="cabar">
+      <span class="cab-hint hand" id="cabHint">↑ open the cupboards, dear ↑</span>
+      <span class="ca-tape"><b class="hand">CA:</b> <code id="caText">[coming soon]</code></span>
+      <button class="ca-copy" id="caCopy" type="button" disabled title="Not yet, dear. Coming soon.">copy</button>
+      <span class="ca-msg hand" id="caMsg" aria-live="polite"></span>
+      <span class="ca-links">
+        <a href="https://x.com/theswearjarsol" target="_blank" rel="noopener">X</a>
+        <a href="#" class="off" title="coming soon" aria-disabled="true">pump.fun</a>
+        <a href="https://swearjar.fun" target="_blank" rel="noopener">swearjar.fun</a>
+      </span>
+    </div>
+  </nav>
+
+  <!-- what's inside each cabinet -->
+  <section class="inside" id="p-rules" aria-live="polite">
+    <button class="shut" data-shut>shut the door ✕</button>
+    <h2>House rules of this kitchen</h2>
+    <ol>
+      <li>There is no tax in this kitchen. <b>All</b> of the pump.fun creator fees on <b>$JAR</b> go into the jar, a public wallet. Trading here costs you nothing more than any other coin on pump.fun.</li>
+      <li>A <b>sell</b> is a swear. I will read it aloud, with your wallet shortened, because I am not a monster. That wallet loses its share for the day.</li>
+      <li>A <b>buy</b> is saying grace. Nobody is scolded for it, and buying more is perfectly fine.</li>
+      <li>At <b>00:00 UTC</b> I empty the jar. Every penny, in SOL, goes to the clean mouths: wallets holding <b>100,000 $JAR</b> or more that did not sell that day.</li>
+      <li>Moving your tokens out of your wallet counts as a sell. I cannot tell a cousin from a stranger, dear.</li>
+      <li>No running, no leverage, no "ser".</li>
+    </ol>
+    <p class="fine">The bonding curve, the pool, the dev wallet and the burn wallet do not get a share. A share smaller than 0.001 SOL waits in the jar for tomorrow.</p>
+    <p class="sig">— Sr. Agnes</p>
+  </section>
+
+  <section class="inside" id="p-confess">
+    <button class="shut" data-shut>shut the door ✕</button>
+    <h2>The confession box</h2>
+    <p>Paste your wallet. I will count your swears today. <span class="demo">DEMO</span></p>
+    <form class="booth" id="booth">
+      <input id="wallet" placeholder="your Solana wallet, child" autocomplete="off" spellcheck="false">
+      <button class="btn" type="submit">confess</button>
+    </form>
+    <div class="report" id="report">
+      <div class="grade hand" id="grade">A</div>
+      <b class="hand" style="font-size:22px">Parish kitchen · report card</b>
+      <table>
+        <tr><td>wallet</td><td id="r-w">—</td></tr>
+        <tr><td>swears today (sells)</td><td id="r-s">—</td></tr>
+        <tr><td>kind words (buys)</td><td id="r-b">—</td></tr>
+        <tr><td>today's share</td><td id="r-e">—</td></tr>
+      </table>
+      <p class="hand" id="r-v" style="font-size:21px;color:var(--red);margin:8px 0 0"></p>
+      <p class="fine" style="margin:4px 0 0">Demo card: numbers are made up from your address. The real box will read the chain.</p>
+    </div>
+    <div class="addon-cert" id="cert">
+      <h3 class="hand">Certificate of Clean Mouth</h3>
+      <p class="fine">For those who held their tongue all day. Framing is optional; bragging is not encouraged. <span class="demo">DEMO — not checked against the chain yet</span></p>
+      <form class="cert-form" id="certForm" novalidate>
+        <input id="cert-name" maxlength="40" placeholder="your name, dear" autocomplete="off">
+        <input id="cert-wallet" placeholder="your Solana wallet" autocomplete="off" spellcheck="false">
+        <button class="btn" type="submit">issue certificate</button>
+      </form>
+      <p class="hand cert-msg" id="cert-msg" aria-live="polite"></p>
+      <div class="cert-prev" id="certPrev" hidden>
+        <canvas id="certCanvas" width="1200" height="800" aria-label="Certificate of Clean Mouth"></canvas>
+        <div class="row"><a class="btn" id="certSave" href="#" download="clean-mouth-certificate.png">save PNG</a></div>
+        <p class="fine">If the button does nothing, right-click (or long-press) the picture and choose "save image".</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="inside" id="p-bless">
+    <button class="shut" data-shut>shut the door ✕</button>
+    <h2>Collection at midnight</h2>
+    <p>One jar, one rule. At 00:00 UTC the whole jar is emptied in SOL, pro rata, to every clean mouth: a wallet holding 100,000 $JAR or more that did not sell that day. No burn, no split, nothing kept back.</p>
+    <div class="splits">
+      <div class="mini"><div class="mj"><i id="m1"></i></div><b id="b1">—</b><span>SOL in the jar<br>(demo)</span></div>
+      <div class="mini"><div class="mj"><i id="m2"></i></div><b id="b2">—</b><span>clean mouths<br>get it all (demo)</span></div>
+      <div class="mini"><div class="mj"><i id="m3"></i></div><b id="b3">—</b><span>swore today<br>get nothing (demo)</span></div>
+    </div>
+    <div class="row"><button class="btn red" id="empty">empty the jar <span class="demo" style="background:#fff">DEMO</span></button></div>
+    <p class="fine" id="emptyOut" style="margin-top:8px">Paid from the jar's public wallet, in batches, with every tx posted. A share smaller than 0.001 SOL is not lost; it waits in the jar for tomorrow's collection.</p>
+    <p class="sig">— Sr. Agnes</p>
+    <div class="addon-calc" id="calc">
+      <h3 class="hand">What is my share if I hold my tongue?</h3>
+      <p class="fine">An estimate, not a promise. Promises are for Sundays.</p>
+      <div class="calc-grid">
+        <label>my $JAR<input id="c-my" inputmode="numeric" autocomplete="off" value="1,000,000"></label>
+        <label>jar size, SOL<input id="c-jar" inputmode="decimal" autocomplete="off"></label>
+        <label>clean supply, $JAR<input id="c-elig" inputmode="numeric" autocomplete="off" value="300,000,000"></label>
+      </div>
+      <div class="calc-out" aria-live="polite">
+        <div><span>today's share</span><b id="c-day">—</b></div>
+        <div><span>× 30, a quiet month (same jar every day)</span><b id="c-month">—</b></div>
+      </div>
+      <p class="hand calc-msg" id="c-msg"></p>
+      <p class="fine calc-formula" id="c-formula">share = jar × my $JAR ÷ clean supply</p>
+      <p class="fine">Clean supply = all $JAR held by wallets with 100,000 or more that did not sell today. The jar size follows the live jar until you change it. <span class="demo">DEMO</span></p>
+    </div>
+  </section>
+
+  <section class="inside" id="p-recipe">
+    <button class="shut" data-shut>shut the door ✕</button>
+    <h2>Recipe for one swear jar</h2>
+    <table class="recipe">
+      <tr><td>name</td><td>the swear jar · <b>$JAR</b></td></tr>
+      <tr><td>kitchen</td><td>Solana, launched on pump.fun</td></tr>
+      <tr><td>CA</td><td><b>[coming soon]</b> (written on the lid, in pencil)</td></tr>
+      <tr><td>supply</td><td>1,000,000,000 (fixed by pump.fun)</td></tr>
+      <tr><td>tax</td><td>none. A normal pump.fun coin; you pay what you pay anywhere else.</td></tr>
+      <tr><td>fees</td><td>100% of the pump.fun creator fees go into the jar, a public wallet</td></tr>
+      <tr><td>swear bot</td><td>every sell is read aloud on X; that wallet loses its share for the day</td></tr>
+      <tr><td>collection</td><td>daily at 00:00 UTC, in SOL, pro rata to every wallet holding ≥ 100,000 $JAR that did not sell that day</td></tr>
+      <tr><td>left out</td><td>bonding curve, pool, dev and burn wallets. Moving tokens out of a wallet counts as a sell (v1).</td></tr>
+      <tr><td>leftovers</td><td>shares under 0.001 SOL carry over to the next day</td></tr>
+      <tr><td>letters</td><td>@theswearjarsol · swearjar.fun</td></tr>
+    </table>
+    <p class="fine" style="margin-top:8px">A joke with a real mechanic. Not a church, not an order, not financial advice. Sister Agnes is a character; she would tell you to save your money.</p>
+  </section>
+
+  <!-- tiled wall -->
+  <div class="splash">
+    <div class="hx-col">
+    <div class="note">
+      <p class="hx-kick">the swear jar · $JAR · on pump.fun</p>
+      <h1 class="hx-head">Every sell is a swear. Hold <span class="hx-tk">$JAR</span>, keep quiet, get paid <span class="hx-sol">SOL</span> every midnight.</h1>
+      <p class="sig">— Sr. Agnes</p>
+    </div>
+    <ol class="hx-flow" aria-label="How the jar works, in three steps">
+      <li class="hx-card"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="9" width="22" height="19" rx="5" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="7" y="4" width="18" height="5" rx="1.5" fill="#b3342c"/><ellipse cx="16" cy="22" rx="6" ry="2.6" fill="#d9a23a" stroke="#8a5f14" stroke-width="1.4"/><path d="M16 11v6m-2.5-2.5L16 17l2.5-2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span><b>1</b> Every trade pays a creator fee <i>→</i> into the jar.</span></li>
+      <li class="hx-card"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 6h22v14H14l-6 6v-6H5z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M12 10l8 6m0-6l-8 6" stroke="#b3342c" stroke-width="2.6" stroke-linecap="round"/></svg><span><b>2</b> Sell = swear <i>→</i> no share today.</span></li>
+      <li class="hx-card"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="18" r="10.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M16 18v-6.5m0 6.5l4.5 2.8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M12 3.5h8" stroke="#b3342c" stroke-width="2.6" stroke-linecap="round"/></svg><span><b>3</b> 00:00 UTC <i>→</i> the jar is split among clean mouths (≥100,000 $JAR).</span></li>
+    </ol>
+    </div>
+    <span class="hook"></span>
+    <div class="ruler" id="ruler" title="the ruler" role="button" aria-label="Tap the ruler" tabindex="0"></div>
+    <div class="agnes" id="agnes" aria-live="polite"><span id="agnesText">Good morning.</span><small>— Sr. Agnes</small></div>
+
+    <div class="jarwrap" id="jarwrap">
+      <div class="hx-meter">
+        <div class="hx-timer" role="timer" aria-label="Time until the jar is emptied at 00:00 UTC"><span class="hx-tl">collection at 00:00 UTC in</span><b id="hxClock">--:--:--</b></div>
+        <ul class="hx-stats">
+          <li id="hxS1"><b id="hxSol">—</b><span>SOL in the jar <em>(demo)</em></span></li>
+          <li id="hxS2"><b id="hxClean">—</b><span>clean mouths <em>(demo)</em></span></li>
+          <li id="hxS3" class="hx-bad"><b id="hxSin">—</b><span>swore today <em>(demo)</em></span></li>
+        </ul>
+      </div>
+      <div class="lid"><span class="slot"></span><span class="ca">$JAR · CA: [coming soon]</span></div>
+      <div class="glass" id="glass">
+        <div class="pile" id="pile"></div>
+        <div class="label"><b>SWEAR JAR</b><span>every sell · $JAR</span></div>
+        <div class="level" id="level">in the jar: 3.840 SOL (demo)</div>
+        <div class="strips" id="strips"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- counter -->
+  <div class="counter">
+    <div class="ledger">
+      <h3><span>Sister's ledger · today</span><span class="demo">DEMO FEED</span></h3>
+      <ul id="ledger"></ul>
+    </div>
+    <div class="tray">
+      <div class="card"><b>Practice at the counter</b><br>Try both. Either way, the creator fee drops into the jar. A kind word (a buy) keeps you on tonight's list. The s-word (a sell) gets read aloud, and that wallet gets no share at 00:00 UTC. <span class="demo">DEMO</span></div>
+      <div class="row">
+        <button class="btn coinbtn silver" id="doBuy">say something kind (buy)</button>
+        <button class="btn coinbtn" id="doSell">say the s-word (sell)</button>
+      </div>
+      <p class="tray-result" id="trayResult" aria-live="polite" hidden></p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  /* JAR_STATE + jar:trade / jar:empty events — used by add-on scripts */
+  var JAR_STATE = window.JAR_STATE = { sol: 3.84, clean: 1212, sinners: 97 };   // all demo numbers
+  var pileCount = 0;
+  var MAX_COINS = 70;
+
+  // ---------- helpers ----------
+  var B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  function b58(n){ var s=""; for(var i=0;i<n;i++){ s += B58[Math.floor(Math.random()*B58.length)]; } return s; }
+  function shortW(){ return b58(4) + "…" + b58(4); }
+  function fmtTok(n){ return n >= 1e6 ? (n/1e6).toFixed(1).replace(/\.0$/,"") + "M" : Math.round(n/1000) + "K"; }
+  function clock(ts){ var d=ts ? new Date(ts) : new Date(); return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2); }
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+  // ---------- Sister Agnes speaks ----------
+  var agnesTimer;
+  function say(text){
+    $("agnesText").textContent = text;
+    $("agnes").classList.add("show");
+    clearTimeout(agnesTimer);
+    agnesTimer = setTimeout(function(){ $("agnes").classList.remove("show"); }, 4500);
+  }
+  var lastAutoSay = 0, AUTO_SAY_GAP = 12000;   // automatic trades: sells only, at most once per 12s
+  var SELL_LINES = [
+    "Language, {w}. That is a sell. Into the jar.",
+    "{w}. I heard that. Into the jar.",
+    "I am not angry, {w}. I am writing it down.",
+    "{w}, at this hour? Into the jar.",
+    "Again, {w}? The ruler is right here.",
+    "{w}, we do not use that word in this kitchen."
+  ];
+  var BUY_LINES = [
+    "Thank you, {w}. A kind word. The small creator fee still goes in the jar, dear.",
+    "A buy. Lovely. Nobody is scolded for saying grace.",
+    "{w} said grace. Buy more if you like; that is allowed."
+  ];
+
+  // ---------- the jar ----------
+  function setLevel(){ $("level").textContent = "in the jar: " + JAR_STATE.sol.toFixed(3) + " SOL" + (window.JAR_REAL ? "" : " (demo)"); }
+
+  function dropCoin(kind){
+    var glass = $("glass"), wrap = $("jarwrap");
+    var f = document.createElement("div");
+    f.className = "falling" + (kind === "buy" ? " buy" : "");
+    wrap.appendChild(f);
+    var target = glass.offsetTop + glass.offsetHeight - 24 - Math.min(pileCount, MAX_COINS) * 2.4;
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      f.style.transform = "translate(" + (Math.random()*60-30) + "px," + (target + 36) + "px) rotate(" + (Math.random()*40-20) + "deg)";
+      f.style.opacity = "0";
+    }); });
+    setTimeout(function(){ f.remove(); addToPile(kind); }, 820);
+  }
+
+  function addToPile(kind){
+    var pile = $("pile");
+    if (pileCount >= MAX_COINS && pile.firstChild) pile.removeChild(pile.firstChild);
+    var c = document.createElement("div");
+    c.className = "c" + (kind === "buy" ? " buy" : "");
+    var w = pile.offsetWidth || 240;
+    var h = Math.min(pileCount, MAX_COINS) * 2.4;
+    c.style.left = (8 + Math.random() * (w - 56)) + "px";
+    c.style.bottom = (4 + h + Math.random()*6) + "px";
+    c.style.transform = "rotate(" + (Math.random()*16-8) + "deg)";
+    pile.appendChild(c);
+    pileCount++;
+  }
+
+  var stripSlots = [
+    {l:"4%", t:"62%", r:"-6deg"}, {l:"40%", t:"72%", r:"4deg"},
+    {l:"10%", t:"82%", r:"3deg"}, {l:"46%", t:"60%", r:"-3deg"}
+  ];
+  var stripIdx = 0;
+  function addStrip(text){
+    var s = $("strips");
+    var slot = stripSlots[stripIdx % stripSlots.length];
+    var old = s.querySelector('[data-slot="' + (stripIdx % stripSlots.length) + '"]');
+    if (old) old.remove();
+    var el = document.createElement("div");
+    el.className = "strip";
+    el.dataset.slot = stripIdx % stripSlots.length;
+    el.style.left = slot.l; el.style.top = slot.t;
+    el.style.setProperty("--r", slot.r);
+    el.style.transform = "rotate(" + slot.r + ")";
+    el.textContent = text;
+    s.appendChild(el);
+    stripIdx++;
+  }
+
+  function ledgerAdd(kind, w, amt, ts){
+    var ul = $("ledger");
+    var li = document.createElement("li");
+    li.className = kind;
+    li.textContent = kind === "sell"
+      ? clock(ts) + " · " + w + " · SOLD " + fmtTok(amt) + " · language!"
+      : clock(ts) + " · " + w + " · bought " + fmtTok(amt) + " · said grace";
+    ul.insertBefore(li, ul.firstChild);
+    while (ul.children.length > 7) ul.removeChild(ul.lastChild);
+  }
+
+  // ---------- a trade happens ----------
+  // window.JAR_LIVE (set by addon-live-js when the backend answers): numbers come from /api, trade() only draws.
+  function trade(kind, w, userMade, tokens, quiet, ts){
+    w = w || shortW();
+    var amt = tokens || (kind === "sell" ? 0.3 : 0.1) * 1e6 + Math.random() * 3.4e6;
+    if (!window.JAR_LIVE){
+      JAR_STATE.sol += 0.0005 + Math.random() * 0.004;   // demo creator fee from one trade
+      if (kind === "sell"){
+        JAR_STATE.sinners++;
+        if (Math.random() < 0.3 && JAR_STATE.clean > 0) JAR_STATE.clean--;
+      } else if (Math.random() < 0.2){
+        JAR_STATE.clean++;
+      }
+    }
+    ledgerAdd(kind, w, amt, ts);
+    if (quiet) return;
+    setLevel();
+    dropCoin(kind);
+    if (kind === "sell"){
+      addStrip(w + " · " + fmtTok(amt));
+      if (userMade || Date.now() - lastAutoSay > AUTO_SAY_GAP){
+        if (!userMade) lastAutoSay = Date.now();
+        say(pick(SELL_LINES).replace("{w}", w));
+      }
+      if (userMade) tapRuler();
+    } else if (userMade){
+      say(pick(BUY_LINES).replace("{w}", w));
+    }
+    if ($("p-bless").classList.contains("show")) fillMinis();
+    document.dispatchEvent(new CustomEvent("jar:trade", {detail:{kind: kind, wallet: w, sol: JAR_STATE.sol}}));
+  }
+
+  // demo feed
+  for (var i=0;i<22;i++) addToPile(Math.random() < 0.5 ? "buy" : "sell");
+  for (var j=0;j<5;j++) ledgerAdd(Math.random() < 0.45 ? "sell" : "buy", shortW(), 2e5 + Math.random()*3e6);
+  setLevel();
+  setTimeout(function(){ say("Good morning. Mind your language; the jar is listening."); }, 700);
+  lastAutoSay = Date.now();   // let the greeting breathe
+  function feedTick(){ if (!document.hidden && !window.JAR_LIVE) trade(Math.random() < 0.42 ? "sell" : "buy"); }
+  window.JAR_SHOW = function(kind, w, tokens, quiet, ts){ trade(kind, w, false, tokens, quiet, ts); };
+  window.JAR_REFRESH = function(){ setLevel(); if ($("p-bless").classList.contains("show")) fillMinis(); };
+  setTimeout(function(){ feedTick(); setInterval(feedTick, 7000); }, 6000);
+
+  $("doBuy").addEventListener("click", function(){ trade("buy", "YOU…demo", true); });
+  $("doSell").addEventListener("click", function(){ trade("sell", "YOU…demo", true); });
+
+  // ---------- ruler ----------
+  function tapRuler(){ var r=$("ruler"); r.classList.remove("tap"); void r.offsetWidth; r.classList.add("tap"); }
+  $("ruler").addEventListener("click", function(){ tapRuler(); say("That is for knuckles, not for playing. Put it back."); });
+  $("ruler").addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); $("ruler").click(); } });
+
+  // ---------- cabinets ----------
+  var cabs = Array.prototype.slice.call(document.querySelectorAll(".cab"));
+  function closeAll(){
+    cabs.forEach(function(c){ c.classList.remove("open"); });
+    document.querySelectorAll(".inside").forEach(function(p){ p.classList.remove("show"); });
+  }
+  cabs.forEach(function(cab){
+    cab.querySelector(".door").addEventListener("click", function(){
+      var wasOpen = cab.classList.contains("open");
+      closeAll();
+      if (!wasOpen){
+        cab.classList.add("open");
+        $("p-" + cab.dataset.panel).classList.add("show");
+        if (cab.dataset.panel === "bless") fillMinis();
+      }
+    });
+  });
+  document.querySelectorAll("[data-shut]").forEach(function(b){ b.addEventListener("click", closeAll); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeAll(); });
+
+  // ---------- confession ----------
+  function hashStr(s){ var h=2166136261; for (var i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  $("booth").addEventListener("submit", function(e){
+    e.preventDefault();
+    var w = $("wallet").value.trim();
+    if (!w){ say("Your wallet, child. I cannot count what I cannot see."); return; }
+    if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(w)){ say("That is not a wallet, dear. That is a guess. A Solana address is 32 to 44 letters and numbers, with no 0, O, I or l."); return; }
+    var short = w.slice(0,4) + "…" + w.slice(-4);
+    if (window.JAR_LIVE){
+      fetch("/api/wallet/" + encodeURIComponent(w), {cache: "no-store"}).then(function(r){ return r.json(); }).then(function(d){
+        if (d.error){ say(d.error); return; }
+        var share = d.eligible ? "eligible at 00:00 UTC · about " + d.estShareSol.toFixed(4) + " SOL (estimate)" + (d.estShareSol < 0.001 ? ", under 0.001 SOL: it waits in the jar for tomorrow" : "")
+          : d.swore ? "not today" : "not on the list: under " + (100000).toLocaleString("en-US") + " $JAR";
+        report(short, d.swearsToday, (d.today.buy && d.today.buy.count) || 0, share);
+      }).catch(function(){ say("The ledger is in the other room, dear. Try again in a moment."); });
+      return;
+    }
+    var h = hashStr(w);
+    var sells = h % 6 < 3 ? 0 : (h % 5) + 1;
+    var buys = (h >> 5) % 9 + 1;
+    report(short, sells, buys, sells === 0 ? "eligible at 00:00 UTC" : "not today");
+  });
+  function report(short, sells, buys, share){
+    $("r-w").textContent = short;
+    $("r-s").textContent = sells;
+    $("r-b").textContent = buys;
+    $("r-e").textContent = share;
+    var grades = ["A+", "B", "C", "D", "D-", "F"];
+    $("grade").textContent = grades[Math.min(sells, 5)];
+    var verdict = sells === 0 ? "Bless you, diamond hands. Not one swear."
+      : sells === 1 ? "One slip. I have written it down. Try harder."
+      : sells < 4 ? sells + " swears. See me in the kitchen after supper."
+      : sells + " swears?! Language, " + short + ". The ruler is warming up.";
+    $("r-v").textContent = verdict;
+    $("report").classList.add("show");
+    say(sells === 0 ? "Bless you, " + short + "." : "Language, " + short + ".");
+    if (sells > 2) tapRuler();
+  }
+
+  // ---------- blessing ----------
+  function fillMinis(){
+    var tot = JAR_STATE.clean + JAR_STATE.sinners || 1;
+    $("b1").textContent = JAR_STATE.sol.toFixed(3);
+    $("b2").textContent = JAR_STATE.clean.toLocaleString("en-US");
+    $("b3").textContent = JAR_STATE.sinners.toLocaleString("en-US");
+    $("m1").style.height = Math.min(95, 15 + JAR_STATE.sol * 12) + "%";
+    $("m2").style.height = Math.round(JAR_STATE.clean / tot * 95) + "%";
+    $("m3").style.height = Math.round(JAR_STATE.sinners / tot * 95) + "%";
+  }
+  $("empty").addEventListener("click", function(){
+    var total = JAR_STATE.sol, mouths = JAR_STATE.clean || 1;
+    var each = total / mouths;
+    var carry = each < 0.001 ? total : 0;
+    $("emptyOut").textContent = carry
+      ? "Only " + total.toFixed(3) + " SOL (demo) in the jar: under 0.001 SOL each for " + mouths.toLocaleString("en-US") + " clean mouths. It carries over to tomorrow. Patience, dear."
+      : "Emptied " + total.toFixed(3) + " SOL (demo), all of it, to " + mouths.toLocaleString("en-US") + " clean mouths (demo): about " + each.toFixed(4) +
+        " SOL per average wallet, more for bigger holders, pro rata. The " + JAR_STATE.sinners.toLocaleString("en-US") + " who swore today get nothing. Any share under 0.001 SOL stays in the jar for tomorrow. Count it. Then say thank you.";
+    JAR_STATE.sol = carry; JAR_STATE.sinners = 0;
+    setLevel();
+    if (!carry){ $("pile").innerHTML = ""; pileCount = 0; $("strips").innerHTML = ""; }
+    say(carry ? "Not enough for a proper share. It waits for tomorrow." : "Emptied. Bless you, clean mouths. Count it, then say thank you.");
+    $("m1").style.height="0"; $("m3").style.height="0";
+    setTimeout(fillMinis, 900);
+    document.dispatchEvent(new CustomEvent("jar:empty", {detail:{sol: total, clean: mouths, carry: carry}}));
+  });
+})();
+</script>
+<script id="addon-tray-result">
+(function(){
+  "use strict";
+  var PRACTICE = "YOU…demo";
+  var sworeAt = null;
+  function hhmm(){ var d=new Date(); return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2); }
+  function show(text, kind){
+    var el = document.getElementById("trayResult");
+    if (!el) return;
+    el.textContent = text;
+    el.className = "tray-result " + kind;
+    el.hidden = false;
+  }
+  document.addEventListener("jar:trade", function(e){
+    var d = e.detail || {};
+    if (d.wallet !== PRACTICE) return;
+    if (d.kind === "sell"){
+      sworeAt = hhmm();
+      show(PRACTICE + " swore at " + sworeAt + ". No share for you tonight. Buy all you like; just don't sell.", "sell");
+    } else if (sworeAt){
+      show("Kind words, but " + PRACTICE + " already swore at " + sworeAt + ". Still no share tonight. Try again tomorrow.", "sell");
+    } else {
+      show("Kind words. You are still on tonight's list.", "buy");
+    }
+  });
+  document.addEventListener("jar:empty", function(e){
+    if (e.detail && e.detail.carry) return;
+    if (sworeAt){ sworeAt = null; show("The jar was emptied. A new day, a clean slate. Mind your language.", "buy"); }
+  });
+})();
+</script>
+<script id="addon-hero-js">
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  function pad(n){ return (n < 10 ? "0" : "") + n; }
+
+  // ---------- countdown to the next 00:00 UTC ----------
+  function tick(){
+    var now = Date.now(), d = new Date(now);
+    var next = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1);
+    var s = Math.max(0, Math.floor((next - now) / 1000));
+    $("hxClock").textContent = pad(Math.floor(s / 3600)) + ":" + pad(Math.floor(s % 3600 / 60)) + ":" + pad(s % 60);
+    setTimeout(tick, 1000 - (Date.now() % 1000) + 5);
+  }
+  tick();
+
+  // ---------- live stats from JAR_STATE (demo numbers) ----------
+  var last = {};
+  function bump(id){ var li = $(id); li.classList.remove("hx-bump"); void li.offsetWidth; li.classList.add("hx-bump"); }
+  function stats(){
+    var S = window.JAR_STATE;
+    if (!S) return;
+    var vals = {
+      hxS1: [ "hxSol", (+S.sol || 0).toFixed(3) ],
+      hxS2: [ "hxClean", (+S.clean || 0).toLocaleString("en-US") ],
+      hxS3: [ "hxSin", (+S.sinners || 0).toLocaleString("en-US") ]
+    };
+    Object.keys(vals).forEach(function(k){
+      var v = vals[k][1];
+      if (last[k] !== undefined && last[k] !== v) bump(k);
+      last[k] = v;
+      $(vals[k][0]).textContent = v;
+    });
+  }
+  stats();
+  document.addEventListener("jar:trade", stats);
+  document.addEventListener("jar:empty", stats);
+
+  // ---------- mobile: keep Agnes's bubble above the jar + timer ----------
+  var splash = document.querySelector(".splash"), wrap = $("jarwrap");
+  function fit(){ if (splash && wrap) splash.style.setProperty("--hx-jarh", (wrap.offsetHeight - 6) + "px"); }
+  fit();
+  window.addEventListener("resize", fit);
+  window.addEventListener("load", fit);
+})();
+</script>
+<script id="addon-nav-js">
+(function(){
+  "use strict";
+  /* ---------- CA rail ---------- */
+  const CA = "[coming soon]";
+  var isReal = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(CA);
+  var caText = document.getElementById("caText"), caCopy = document.getElementById("caCopy"), caMsg = document.getElementById("caMsg");
+  var msgTimer;
+  function note(t){ if (!caMsg) return; caMsg.textContent = t; clearTimeout(msgTimer); msgTimer = setTimeout(function(){ caMsg.textContent = ""; }, 2800); }
+  if (caText) caText.textContent = CA;
+  if (caCopy){
+    if (isReal){
+      caCopy.disabled = false;
+      caCopy.title = "Copy the contract address";
+      var lid = document.querySelector(".lid .ca");
+      if (lid) lid.textContent = "$JAR · CA: " + CA.slice(0,4) + "…" + CA.slice(-4);
+    }
+    caCopy.addEventListener("click", function(){
+      if (!isReal) return;
+      function ok(){ note("Copied. Write it down neatly."); }
+      function fail(){
+        try {
+          var r = document.createRange(); r.selectNodeContents(caText);
+          var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        } catch (e) {}
+        note("I have underlined it. Copy it yourself, dear.");
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(CA).then(ok, fail);
+      else fail();
+    });
+  }
+  document.querySelectorAll(".cabar a.off").forEach(function(a){
+    a.addEventListener("click", function(e){ e.preventDefault(); note("Not open yet, dear. Coming soon."); });
+  });
+
+  /* ---------- first-visit hint ---------- */
+  var nav = document.querySelector(".cabinets"), hint = document.getElementById("cabHint");
+  var KEY = "jar-cupboards-opened", seen = false;
+  try { seen = localStorage.getItem(KEY) === "1"; } catch (e) {}
+  if (seen){ if (hint) hint.hidden = true; }
+  else if (nav) nav.classList.add("nudge");
+  function markSeen(){
+    if (hint) hint.hidden = true;
+    if (nav) nav.classList.remove("nudge");
+    try { localStorage.setItem(KEY, "1"); } catch (e) {}
+  }
+
+  /* ---------- panels: focus, scroll lock, scroll affordance ---------- */
+  var root = document.documentElement;
+  var cabs = Array.prototype.slice.call(document.querySelectorAll(".cab"));
+  var panels = Array.prototype.slice.call(document.querySelectorAll(".inside"));
+  var lastDoor = null, openId = null;
+
+  cabs.forEach(function(cab){
+    var d = cab.querySelector(".door");
+    if (!d) return;
+    d.setAttribute("aria-controls", "p-" + cab.dataset.panel);
+    d.setAttribute("aria-expanded", "false");
+    d.addEventListener("click", function(){ lastDoor = d; });
+  });
+
+  function checkMore(p){
+    var more = p.classList.contains("show") && (p.scrollHeight - p.scrollTop - p.clientHeight > 6);
+    if (more !== p.classList.contains("more")) p.classList.toggle("more", more);
+  }
+  function later(p){ setTimeout(function(){ checkMore(p); }, 80); setTimeout(function(){ checkMore(p); }, 1100); }
+
+  function sync(){
+    var open = null;
+    for (var i = 0; i < panels.length; i++){ if (panels[i].classList.contains("show")){ open = panels[i]; break; } }
+    var id = open ? open.id : null;
+    if (id === openId) return;
+    openId = id;
+    cabs.forEach(function(cab){
+      var d = cab.querySelector(".door");
+      if (d) d.setAttribute("aria-expanded", String(!!open && open.id === "p-" + cab.dataset.panel));
+    });
+    root.classList.toggle("jar-lock", !!open);
+    panels.forEach(function(p){ if (p !== open) p.classList.remove("more"); });
+    if (open){
+      markSeen();
+      for (var j = 0; j < cabs.length; j++){ if ("p-" + cabs[j].dataset.panel === open.id){ lastDoor = cabs[j].querySelector(".door"); break; } }
+      open.scrollTop = 0;
+      try { open.focus({preventScroll: true}); } catch (e) { open.focus(); }
+      later(open);
+    } else {
+      var a = document.activeElement;
+      var inPanel = panels.some(function(p){ return p.contains(a); });
+      if (lastDoor && (!a || a === document.body || inPanel)) lastDoor.focus();
+    }
+  }
+
+  panels.forEach(function(p){
+    p.setAttribute("tabindex", "-1");
+    p.addEventListener("scroll", function(){ checkMore(p); }, {passive: true});
+    p.addEventListener("click", function(){ later(p); });
+    p.addEventListener("submit", function(){ later(p); });
+    p.addEventListener("input", function(){ later(p); });
+  });
+  if (window.MutationObserver){
+    var mo = new MutationObserver(sync);
+    panels.forEach(function(p){ mo.observe(p, {attributes: true, attributeFilter: ["class"]}); });
+  }
+  window.addEventListener("resize", function(){ panels.forEach(checkMore); });
+  sync();
+})();
+</script>
+<script id="addon-tools-js">
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var SUPPLY = 1e9, MIN_HOLD = 1e5, DUST = 0.001;
+  function num(v){ v = String(v).replace(/[,\s_]/g, ""); return v === "" ? NaN : Number(v); }
+  function fmtInt(n){ return Math.round(n).toLocaleString("en-US"); }
+  function fmtSol(x){
+    if (!isFinite(x)) return "—";
+    if (x === 0) return "0 SOL";
+    if (x >= 1) return x.toFixed(3) + " SOL";
+    if (x >= DUST) return x.toFixed(4) + " SOL";
+    return x < 0.000001 ? "< 0.000001 SOL" : x.toFixed(6) + " SOL";
+  }
+  function state(){ return window.JAR_STATE || {sol: 0}; }
+
+  /* ---------- 1. share calculator ---------- */
+  var jarEdited = false;
+  function syncJar(){ if (!jarEdited && $("c-jar")) $("c-jar").value = (+state().sol || 0).toFixed(3); }
+  function calc(){
+    var my = num($("c-my").value), jar = num($("c-jar").value), elig = num($("c-elig").value);
+    var day = $("c-day"), month = $("c-month"), msg = $("c-msg"), f = $("c-formula");
+    if (!isFinite(my) || !isFinite(jar) || !isFinite(elig) || my < 0 || jar < 0 || elig <= 0){
+      day.textContent = month.textContent = "—";
+      msg.textContent = "Numbers only, dear. Plain ones, no letters.";
+      f.textContent = "share = jar × my $JAR ÷ clean supply";
+      return;
+    }
+    var note = "";
+    if (my > SUPPLY){ my = SUPPLY; note = "There are only 1,000,000,000 $JAR in the whole kitchen, dear. "; }
+    if (elig > SUPPLY){ elig = SUPPLY; note += "The clean supply cannot be more than all of it. "; }
+    if (my >= MIN_HOLD && elig < my){ elig = my; note += "The clean supply includes your own, so it cannot be smaller than your pocket. "; }
+    if (my < MIN_HOLD){
+      day.textContent = "0 SOL"; month.textContent = "0 SOL";
+      msg.textContent = note + "Under 100,000 $JAR, dear, you are not on the list yet.";
+      f.textContent = "share = 0, because " + fmtInt(my) + " $JAR is under the 100,000 minimum";
+      return;
+    }
+    var share = jar * my / elig;
+    day.textContent = fmtSol(share);
+    month.textContent = fmtSol(share * 30);
+    f.textContent = "share = jar × my $JAR ÷ clean supply = " + jar.toFixed(3) + " × " + fmtInt(my) + " ÷ " + fmtInt(elig) + " = " + fmtSol(share);
+    msg.textContent = note + (share === 0
+      ? "An empty jar pays nothing. Patience, dear."
+      : share < DUST
+        ? "Under 0.001 SOL. It is not lost; it carries over to tomorrow."
+        : "Hold your tongue until midnight and that is roughly yours. Roughly, dear.");
+  }
+  if ($("calc")){
+    syncJar();
+    $("c-jar").addEventListener("input", function(){ jarEdited = $("c-jar").value.trim() !== ""; if (!jarEdited) syncJar(); calc(); });
+    ["c-my", "c-elig"].forEach(function(id){
+      $(id).addEventListener("input", calc);
+      $(id).addEventListener("blur", function(){ var n = num($(id).value); if (isFinite(n) && n >= 0) $(id).value = fmtInt(n); });
+    });
+    document.addEventListener("jar:trade", function(){ if (!jarEdited){ syncJar(); calc(); } });
+    document.addEventListener("jar:empty", function(){ setTimeout(function(){ if (!jarEdited){ syncJar(); calc(); } }, 0); });
+    calc();
+  }
+
+  /* ---------- 2. Certificate of Clean Mouth ---------- */
+  var WALLET_RE = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+  var certUrl = null, walletTyped = false;
+
+  function fitFont(ctx, text, max, size, family){
+    do { ctx.font = size + "px " + family; size -= 2; } while (ctx.measureText(text).width > max && size > 20);
+  }
+  function seal(ctx, x, y, r){
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.beginPath();                                          // wavy wax edge
+    for (var i = 0; i <= 72; i++){
+      var a = i / 72 * Math.PI * 2, rr = r + (i % 2 ? 5 : -2);
+      ctx[i ? "lineTo" : "moveTo"](Math.cos(a) * rr, Math.sin(a) * rr);
+    }
+    ctx.closePath();
+    ctx.fillStyle = "#b3342c"; ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, r - 12, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(255,240,220,.65)"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = "#f0c45c"; ctx.strokeStyle = "#fff6e0"; ctx.lineWidth = 3;   // a tiny jar in the wax
+    ctx.fillRect(-20, -38, 40, 10);
+    ctx.beginPath();
+    ctx.moveTo(-24, -26); ctx.lineTo(24, -26); ctx.lineTo(26, 22);
+    ctx.quadraticCurveTo(26, 32, 14, 32); ctx.lineTo(-14, 32);
+    ctx.quadraticCurveTo(-26, 32, -26, 22); ctx.closePath();
+    ctx.stroke();
+    ctx.fillRect(-21, 8, 42, 20);
+    ctx.fillStyle = "#fff6e0"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.font = "bold 13px Lato, sans-serif";
+    ctx.fillText("CLEAN", 0, -9);
+    ctx.font = "bold 12px Lato, sans-serif";
+    ctx.fillText("· $JAR ·", 0, r - 24);
+    ctx.restore();
+  }
+  function drawCert(name, wallet){
+    var cv = $("certCanvas"), ctx = cv.getContext("2d"), W = cv.width, H = cv.height;
+    var short = wallet.slice(0, 4) + "…" + wallet.slice(-4);
+    var date = new Date().toLocaleDateString("en-GB", {day: "numeric", month: "long", year: "numeric", timeZone: "UTC"});
+    var HAND = '"Caveat Brush", "Comic Sans MS", cursive', SANS = 'Lato, "Segoe UI", Arial, sans-serif';
+    ctx.fillStyle = "#fbf5e4"; ctx.fillRect(0, 0, W, H);       // paper
+    ctx.strokeStyle = "rgba(214,227,239,.6)"; ctx.lineWidth = 1;
+    for (var y = 60; y < H; y += 34){ ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    ctx.strokeStyle = "#1f2a44"; ctx.lineWidth = 10; ctx.strokeRect(28, 28, W - 56, H - 56);   // borders
+    ctx.strokeStyle = "#d9a23a"; ctx.lineWidth = 3; ctx.strokeRect(48, 48, W - 96, H - 96);
+    ctx.setLineDash([6, 8]); ctx.strokeStyle = "#b3342c"; ctx.lineWidth = 2; ctx.strokeRect(60, 60, W - 120, H - 120); ctx.setLineDash([]);
+    [[60, 60], [W - 60, 60], [60, H - 60], [W - 60, H - 60]].forEach(function(p){            // corner coins
+      ctx.beginPath(); ctx.ellipse(p[0], p[1], 20, 9, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "#d9a23a"; ctx.fill(); ctx.strokeStyle = "#8a5f14"; ctx.lineWidth = 2; ctx.stroke();
+    });
+    ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = "#1f2a44"; ctx.font = "88px " + HAND;
+    ctx.fillText("Certificate of Clean Mouth", W / 2, 170);
+    ctx.fillStyle = "#8a5f14"; ctx.font = "bold 18px " + SANS;
+    ctx.fillText("ISSUED BY THE PARISH KITCHEN · THE SWEAR JAR", W / 2, 212);
+    ctx.fillStyle = "#27304a"; ctx.font = "italic 30px " + SANS;
+    ctx.fillText("This is to certify that", W / 2, 292);
+    ctx.fillStyle = "#b3342c"; fitFont(ctx, name, W - 260, 76, HAND);
+    ctx.fillText(name, W / 2, 378);
+    var nw = Math.min(W - 260, ctx.measureText(name).width + 60);
+    ctx.strokeStyle = "#1f2a44"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(W / 2 - nw / 2, 396); ctx.lineTo(W / 2 + nw / 2, 396); ctx.stroke();
+    ctx.fillStyle = "#6b6f7c"; ctx.font = "24px " + SANS;
+    ctx.fillText("(wallet " + short + ")", W / 2, 432);
+    ctx.fillStyle = "#27304a"; ctx.font = "32px " + SANS;
+    ctx.fillText("kept a clean mouth and did not say the s-word.", W / 2, 494);
+    ctx.textAlign = "left";                                     // date, left
+    ctx.fillStyle = "#1f2a44"; ctx.font = "34px " + HAND;
+    ctx.fillText(date, 130, 628);
+    ctx.strokeStyle = "#1f2a44"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(130, 644); ctx.lineTo(420, 644); ctx.stroke();
+    ctx.fillStyle = "#6b6f7c"; ctx.font = "18px " + SANS;
+    ctx.fillText("date (UTC)", 130, 670);
+    ctx.textAlign = "right";                                    // signature, right
+    ctx.fillStyle = "#b3342c"; ctx.font = "58px " + HAND;
+    ctx.fillText("— Sr. Agnes", W - 130, 630);
+    ctx.beginPath(); ctx.moveTo(W - 420, 644); ctx.lineTo(W - 130, 644); ctx.stroke();
+    ctx.fillStyle = "#6b6f7c"; ctx.font = "18px " + SANS;
+    ctx.fillText("keeper of the jar", W - 130, 670);
+    seal(ctx, W / 2, 620, 74);                                  // seal, middle
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#1f2a44"; ctx.font = "bold 22px " + SANS;
+    ctx.fillText("$JAR · swearjar.fun", W / 2, 730);
+    ctx.fillStyle = "#8a7a5a"; ctx.font = "15px " + SANS;
+    ctx.fillText("demo — not checked against the chain yet · a joke, not a sacrament, not financial advice", W / 2, 754);
+  }
+  function setSaveLink(){
+    var cv = $("certCanvas"), a = $("certSave");
+    try {
+      cv.toBlob(function(blob){
+        if (!blob) return;
+        if (certUrl) URL.revokeObjectURL(certUrl);
+        certUrl = URL.createObjectURL(blob);
+        a.href = certUrl;
+      }, "image/png");
+    } catch (err){
+      try { a.href = cv.toDataURL("image/png"); } catch (e2){ a.setAttribute("href", "#"); }
+    }
+  }
+  if ($("cert")){
+    var bw = $("wallet"), cw = $("cert-wallet");
+    cw.addEventListener("input", function(){ walletTyped = cw.value.trim() !== ""; });
+    if (bw){
+      var mirror = function(){ if (!walletTyped) cw.value = bw.value.trim(); };
+      bw.addEventListener("input", mirror);
+      bw.addEventListener("change", mirror);
+    }
+    $("certSave").addEventListener("click", function(e){
+      if ($("certSave").getAttribute("href") === "#"){ e.preventDefault(); $("cert-msg").textContent = "Right-click the picture and save it, dear. My printer is old."; }
+    });
+    $("certForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var name = $("cert-name").value.replace(/\s+/g, " ").trim().slice(0, 40);
+      var w = cw.value.trim() || (bw ? bw.value.trim() : "");
+      var msg = $("cert-msg");
+      if (!name){ msg.textContent = "A name, dear. I do not sign blank certificates."; $("cert-name").focus(); return; }
+      if (!w){ msg.textContent = "Your wallet, child. I cannot bless what I cannot see."; cw.focus(); return; }
+      if (!WALLET_RE.test(w)){ msg.textContent = "That is not a wallet, dear. A Solana address is 32 to 44 letters and numbers, with no 0, O, I or l."; cw.focus(); return; }
+      cw.value = w;
+      msg.textContent = "One moment. I am finding my good pen.";
+      var ready = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+      ready.then(function(){
+        if (!document.fonts || !document.fonts.load) return;
+        return Promise.all([document.fonts.load('60px "Caveat Brush"'), document.fonts.load("30px Lato"), document.fonts.load("italic 30px Lato")]).catch(function(){});
+      }).then(function(){
+        drawCert(name, w);
+        $("certPrev").hidden = false;
+        setSaveLink();
+        msg.textContent = "Signed and sealed, " + name + ". Now go and keep it true.";
+      });
+    });
+  }
+})();
+</script>
+<script id="addon-live-js">
+/* Live mode: if the backend answers on /api, the jar, feed, counts and confession read from it.
+   Without a backend the page stays a self-running demo. demo=true from the API (mock mode) keeps the demo labels. */
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var seen = {}, polling = false;
+  function get(p){ return fetch("/api" + p, {cache: "no-store"}).then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); }); }
+  function short(w){ return w.slice(0,4) + "…" + w.slice(-4); }
+  function sync(st){
+    var S = window.JAR_STATE;
+    S.sol = st.jarSol; S.clean = st.cleanCount; S.sinners = st.sinnersToday;
+    window.JAR_REFRESH && window.JAR_REFRESH();
+    document.dispatchEvent(new CustomEvent("jar:trade", {detail: {kind: "sync", wallet: "", sol: S.sol}}));
+  }
+  function labels(st){
+    var badge = document.querySelector(".ledger h3 .demo");
+    if (badge) badge.textContent = st.demo ? "LIVE · TEST DATA" : "LIVE";
+    var fine = $("report") && $("report").querySelector(".fine");
+    if (fine) fine.textContent = st.demo ? "Read from the backend ledger (test data, mock mode)." : "Read from the chain. Today means since 00:00 UTC.";
+    if (!st.demo){
+      window.JAR_REAL = true;
+      document.documentElement.classList.add("jar-real");
+      document.querySelectorAll(".mini span, .hx-meter em, #hxS1 em, #hxS2 em, #hxS3 em").forEach(function(el){
+        el.innerHTML = el.innerHTML.replace(/\s*\(demo\)/g, "");
+      });
+    }
+  }
+  function tick(){
+    if (polling || document.hidden) return;
+    polling = true;
+    get("/feed?limit=15").then(function(list){
+      list.slice().reverse().forEach(function(e){
+        if (seen[e.sig + e.wallet + e.kind]) return;
+        seen[e.sig + e.wallet + e.kind] = 1;
+        window.JAR_SHOW(e.kind === "buy" ? "buy" : "sell", short(e.wallet), e.tokens, false, e.ts);
+      });
+      return get("/state").then(sync);
+    }).catch(function(){}).then(function(){ polling = false; });
+  }
+  get("/state").then(function(st){
+    window.JAR_LIVE = true;
+    labels(st);
+    sync(st);
+    return get("/feed?limit=15").then(function(list){   // same window as tick(): all marked seen, newest 7 shown
+      $("ledger").innerHTML = "";
+      list.forEach(function(e){ seen[e.sig + e.wallet + e.kind] = 1; });
+      list.slice(0, 7).reverse().forEach(function(e){
+        window.JAR_SHOW(e.kind === "buy" ? "buy" : "sell", short(e.wallet), e.tokens, true, e.ts);
+      });
+      setInterval(tick, 4000);
+    });
+  }).catch(function(){ /* no backend: stay in demo mode */ });
+
+  // In live mode the jar empties itself at midnight; the button shows the last real collection instead.
+  document.addEventListener("click", function(ev){
+    if (!window.JAR_LIVE || !ev.target.closest || !ev.target.closest("#empty")) return;
+    ev.stopImmediatePropagation(); ev.preventDefault();
+    get("/collections").then(function(list){
+      var c = list.filter(function(x){ return x.status === "paid"; })[0];
+      $("emptyOut").textContent = c
+        ? "Last collection, " + c.day + ": " + c.paid_sol.toFixed(3) + " SOL to " + c.paid_count.toLocaleString("en-US") + " clean mouths. " + c.sinner_count + " wallets swore and got nothing. The jar empties itself at 00:00 UTC; I do not need your help, dear."
+        : "No collection has been paid yet. The jar empties itself at 00:00 UTC; I do not need your help, dear.";
+    }).catch(function(){});
+  }, true);
+})();
+</script>
+<style id="addon-live">.jar-real .demo{display:none}</style>
+</body>
+</html>
