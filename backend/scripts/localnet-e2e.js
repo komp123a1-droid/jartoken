@@ -150,7 +150,8 @@ const saveKp = (name, kp) => { const f = path.join(DIR, name + ".json"); fs.writ
   const sts = (await conn.getSignatureStatuses(sigs, { searchTransactionHistory: true })).value;
   check("every payout signature is confirmed on-chain", sts.every((x) => x && !x.err), `${sigs.length} txs`);
   const jarAfter = await bal(jar.publicKey);
-  check("jar spent exactly payouts + fees (5000/tx)", jarBefore - jarAfter === rows.reduce((t, r) => t + r.lamports, 0) + 5000 * sigs.length, `fees ${5000 * sigs.length}`);
+  let fees = 0; for (const s of sigs) fees += (await conn.getTransaction(s, { commitment: "confirmed", maxSupportedTransactionVersion: 0 })).meta.fee;
+  check("jar spent exactly payouts + tx fees (read from the chain)", jarBefore - jarAfter === rows.reduce((t, r) => t + r.lamports, 0) + fees, `fees ${fees}`);
   check("jar keeps the reserve", jarAfter >= 0.01 * LAMPORTS_PER_SOL, (jarAfter / 1e9).toFixed(4) + " SOL left");
   const again = await collector.collect({ day: today, send: true });
   check("second run -> already paid, jar unchanged", again.skipped === "already paid" && (await bal(jar.publicKey)) === jarAfter);

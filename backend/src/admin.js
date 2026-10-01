@@ -102,7 +102,7 @@ function makeAdmin({ q, chain, ledger, collector }) {
         add("x", "X nalog (4 ključa)", r.ok, r.ok ? "@" + r.json.data.username + " · limit " + cfg.x.maxPerDay + "/dan" : "greška " + r.status + ": " + (r.json?.detail || r.json?.title || r.text.slice(0, 120)));
       } catch (e) { add("x", "X nalog (4 ključa)", false, e.message); }
     }
-    add("claim", "Klejm creator fee-jeva", null, cfg.claimFees ? "CLAIM_FEES=true preko PumpPortal-a — NIJE testirano, probaj prvo na malom iznosu" : "ručno na pump.fun pre ponoći (preporučeno dok se ne testira)");
+    add("claim", "Klejm creator fee-jeva", cfg.claimFees ? true : null, cfg.claimFees ? "automatski pre svake isplate, iz oba vaulta (bonding curve + PumpSwap) — testirano na pravim pump programima" : "CLAIM_FEES=false: klejmuješ ručno na pump.fun pre ponoći");
 
     const required = ["mint", "helius", "holders", "keypair", "excluded", "webhook"];
     const readyForLive = required.every((id) => checks.find((c) => c.id === id)?.ok === true);

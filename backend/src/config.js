@@ -22,7 +22,7 @@ module.exports = {
   reserveSol: num(env.RESERVE_SOL, 0.02),
   batchSize: Math.min(Math.max(1, num(env.BATCH_SIZE, 18)), 21), // 21 transfers = 1195 B, 22 > 1232 B tx limit
   dryRun: env.DRY_RUN !== "false",
-  claimFees: env.CLAIM_FEES === "true",
+  claimFees: env.CLAIM_FEES !== "false", // on by default: the jar is filled by claiming creator fees before each split
 
   webhookSecret: env.WEBHOOK_SECRET || "",
 

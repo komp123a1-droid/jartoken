@@ -234,7 +234,7 @@ ol.launch{margin:0;padding-left:22px} ol.launch li{margin:5px 0}
     <li><code>DRY_RUN=false</code>.</li>
     <li><code>npm run collect -- --send</code> ili sačekaj ponoć (00:00 UTC).</li>
   </ol>
-  <div class="note"><b>Pažnja:</b> automatski claim creator fee-a preko PumpPortal-a (<code>CLAIM_FEES=true</code>) <b>nije testiran</b>. Na početku claim-uj ručno na pump.fun pre ponoći.</div>
+  <div class="note"><b>Klejm fee-jeva:</b> automatski pre svake isplate (<code>CLAIM_FEES=true</code>), iz oba vaulta (bonding curve + PumpSwap). Testirano na pravim pump.fun programima kloniranim sa mainneta: <code>npm run pump-validator &amp;&amp; npm run pump-test</code>.</div>
 </section>
 
 <!-- 9. CONFIG -->

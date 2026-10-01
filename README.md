@@ -35,7 +35,9 @@ Ako imaš `~/.cloudflared/config.yml` za drugi projekat, dodaj `--config prazan.
 ```bash
 cd backend
 npm run test:all     # self-test + simulacija dana (53 provere) + isplate na offline Solana lancu (8 provera)
-npm run localnet     # PRAV Solana lanac lokalno (Docker): token, 60 holdera, pravi trejdovi, prave SOL isplate, ubijen proces usred isplate (27 provera)
+npm run pump-validator  # lokalni validator sa PRAVIM pump.fun programima kloniranim sa mainneta (Docker)
+npm run pump-test    # launch → trejdovi → klejm → graduacija na PumpSwap → AMM klejm → ponoćna isplata (19 provera)
+npm run localnet     # token, 60 holdera, pravi trejdovi, prave SOL isplate, ubijen proces usred isplate (27 provera)
 npm run devnet all   # isto na DEVNETU (treba ~1 SOL na devnet test wallet, vidi dole)
 ```
 
@@ -96,7 +98,9 @@ Test wallet je u `backend/keys/devnet/payout.json` (gitignored — pošalji ga d
 7. `MODE=live`, **`DRY_RUN=true` prvi dan**, `/test/` → preflight mora da kaže SPREMNO, proveri probnu isplatu.
 8. `DRY_RUN=false`. Ručno: `npm run collect -- --send`.
 
-Klejm creator fee-jeva preko PumpPortal-a (`CLAIM_FEES`) **nije testiran** — u početku klejmuj ručno na pump.fun pre ponoći.
+Klejm creator fee-jeva (`CLAIM_FEES=true`, podrazumevano) ide automatski pre svake isplate, iz oba vaulta: bonding curve i PumpSwap posle graduacije. Testirano na **pravim pump.fun programima** kloniranim sa mainneta (`npm run pump-validator && npm run pump-test`).
+
+**Koliko tegla dobija** (pump fee config na mainnetu, 2026-10-01): **0.30%** svakog trejda na bonding curve-u; posle graduacije na PumpSwap **0.95%** pri ~420–1,470 SOL market capa, pa postepeno do 0.05% pri ~98,000 SOL. Primer: 1,000 SOL obima na curve-u = 3 SOL u tegli.
 
 ## Bezbednost (ne menjati bez razloga)
 

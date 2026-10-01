@@ -2,7 +2,7 @@
 const fs = require("fs");
 const {
   Connection, PublicKey, Keypair, SystemProgram, Transaction, VersionedTransaction,
-  LAMPORTS_PER_SOL,
+  LAMPORTS_PER_SOL, sendAndConfirmTransaction,
 } = require("@solana/web3.js");
 const cfg = require("./config");
 
@@ -140,20 +140,26 @@ async function sendPayouts(keypair, payouts, { onSigned, onBatch } = {}) {
   return out;
 }
 
-// Claim pump.fun creator fees into the jar wallet via PumpPortal's local-tx API.
-// UNVERIFIED against mainnet in this repo: test with a tiny amount before enabling CLAIM_FEES.
-async function claimCreatorFees(keypair) {
-  const res = await fetch("https://pumpportal.fun/api/trade-local", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ publicKey: keypair.publicKey.toBase58(), action: "collectCreatorFee", priorityFee: 0.000001, pool: "pump" }),
-  });
-  if (!res.ok) throw new Error("PumpPortal: " + res.status + " " + (await res.text()));
-  const tx = VersionedTransaction.deserialize(new Uint8Array(await res.arrayBuffer()));
-  tx.sign([keypair]);
-  const sig = await conn().sendTransaction(tx);
-  await conn().confirmTransaction(sig, "confirmed");
-  return sig;
+// Claim pump.fun creator fees into the jar wallet with the official SDK: drains BOTH vaults in one tx —
+// the bonding-curve creator vault (SOL) and, after graduation, the PumpSwap coin-creator vault (WSOL, unwrapped).
+// Returns the signature, or null when nothing is waiting. Tested on the real programs: scripts/pump-e2e.js.
+async function pendingCreatorFeesLamports(creator) {
+  const { OnlinePumpSdk } = require("@pump-fun/pump-sdk");
+  return Number(await new OnlinePumpSdk(conn()).getCreatorVaultBalanceBothPrograms(new PublicKey(creator)));
 }
 
-module.exports = { isAddress, isAddressAny, loadKeypair, balanceSol, holders, sendPayouts, sigStatus, claimCreatorFees, LAMPORTS_PER_SOL };
+async function claimCreatorFees(keypair) {
+  const { OnlinePumpSdk } = require("@pump-fun/pump-sdk");
+  const sdk = new OnlinePumpSdk(conn());
+  if (!(await pendingCreatorFeesLamports(keypair.publicKey))) return null;
+  let ixs = await sdk.collectCoinCreatorFeeInstructions(keypair.publicKey, keypair.publicKey);
+  // Before graduation the PumpSwap vault does not exist yet; the SDK would create its WSOL account at the jar's
+  // expense (~0.002 SOL rent) for nothing. Until it exists, only the bonding-curve collect is sent.
+  const { coinCreatorVaultAuthorityPda, coinCreatorVaultAtaPda } = require("@pump-fun/pump-swap-sdk");
+  const { NATIVE_MINT, TOKEN_PROGRAM_ID } = require("@solana/spl-token");
+  const ammVault = coinCreatorVaultAtaPda(coinCreatorVaultAuthorityPda(keypair.publicKey), NATIVE_MINT, TOKEN_PROGRAM_ID);
+  if (!(await conn().getAccountInfo(ammVault))) ixs = ixs.slice(0, 1);
+  return sendAndConfirmTransaction(conn(), new Transaction().add(...ixs), [keypair], { commitment: "confirmed" });
+}
+
+module.exports = { isAddress, isAddressAny, loadKeypair, balanceSol, holders, sendPayouts, sigStatus, claimCreatorFees, pendingCreatorFeesLamports, LAMPORTS_PER_SOL };
